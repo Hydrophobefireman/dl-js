@@ -1,0 +1,103 @@
+<html>
+
+<head>
+    <title>
+        dl-JS - JavaScript re-write of dl-py
+    </title>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Open Sans', 'sans-serif';
+            margin: 0px;
+            padding: 0px;
+        }
+        
+        .main {
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+        }
+        
+        .linker {
+            height: 30px;
+            width: 100%;
+            background-color: #ffffff;
+        }
+        
+        .linker:hover,
+        .linker:focus {
+            background-color: #e3e3e3;
+        }
+        
+        .input_gos {
+            -moz-border-radius: 15px;
+            -webkit-border-radius: 15px;
+            border-radius: 15px;
+            padding: 4px;
+        }
+        
+        a {
+            color: #000;
+        }
+        
+        .input_gosb {
+            -moz-border-radius: 3px;
+            -webkit-border-radius: 3px;
+            border-radius: 3px;
+            padding: 8px;
+            border: none;
+            outline: none;
+            background: #3367d6;
+            color: white;
+            text-transform: uppercase;
+            cursor: pointer;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        textarea,
+        input,
+        button {
+            outline: none;
+            box-shadow: none;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+    </script>
+    <div class="main">
+        <div class=box>
+            <div class=content>
+                <div>Enter The URL of the video</div>
+                <form action="/video/" id=submit-s>
+                    <input class=input_gos type="text" name="url" style="width:50%;">
+                    <input class=input_gosb id=go_lk type="submit" style="display:none;" value='Go'>
+                </form>
+                <button class=input_gosb onclick="document.getElementById('submit-s').submit()">Go</button>
+                <hr>
+                <a href='/'>
+                    <div class=linker>
+                        <span>Go to Homepage</span>
+                    </div>
+                </a>
+                <div style="margin-top:30px; ">OR Try the YouTube only search feature.</div>
+                <div style="font-size: 14px; ">Empty Search will return results from the US trending page</div>
+                <form action=/search/ id=search-s>
+                    <input id=search class=input_gos style="width: 45%;" type="text" name="q">
+                    <input type='submit' style="display: none;" value="search">
+                </form>
+                <div style="margin-top:15px; ">
+                    <button class=input_gosb id="ybbe" onclick="document.getElementById('search-s').submit()">Search</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

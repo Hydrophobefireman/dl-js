@@ -1,0 +1,243 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="never">
+    <meta name="referrer" content="no-referrer">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <style>
+        a {
+            color: black;
+        }
+        
+        #skelly {
+            transition: 1.5s;
+        }
+        
+        .skelly_btn {
+            -moz-border-radius: 100px;
+            -webkit-border-radius: 100px;
+            border-radius: 100px;
+            padding: 8px;
+            border: none;
+            width: 25%;
+            outline: none;
+            background: #e3e3e3;
+            color: white;
+            text-transform: uppercase;
+            cursor: inherit;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            transition: 1.5s;
+        }
+        
+        #skelly_div {
+            padding: 8px;
+            border: none;
+            outline: none;
+            background: #e3e3e3;
+            color: #000;
+            text-transform: uppercase;
+            cursor: inherit;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            transition: 1.5s;
+        }
+        
+        .rounded-image {
+            -moz-border-radius: 5px;
+            -webkit-border-radius: 5px;
+            border-radius: 5px;
+            height: 300px;
+            width: 400px;
+            max-width: 100%;
+        }
+        
+        .rc {
+            -moz-border-radius: 15px;
+            -webkit-border-radius: 15px;
+            border-radius: 15px;
+            padding: 4px;
+        }
+        
+        #s-button {
+            -moz-border-radius: 3px;
+            -webkit-border-radius: 3px;
+            border-radius: 3px;
+            padding: 8px;
+            border: none;
+            outline: none;
+            background: #3367d6;
+            color: white;
+            text-transform: uppercase;
+            cursor: pointer;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        .center_s {
+            margin-right: auto;
+            margin-left: auto;
+            text-align: center;
+        }
+        
+        input,
+        textarea,
+        button {
+            outline: none
+        }
+    </style>
+    <title>{{q|safe}}</title>
+</head>
+
+<body>
+    <script>
+        function decodehtml(html) {
+            var txt = document.createElement("textarea");
+            txt.innerHTML = html;
+            return txt.value;
+        }
+        var doctitle = decodehtml(decodehtml("{{q}}"));
+        if (doctitle.length != 0) {
+            var titles = "Results for " + doctitle
+            document.title = titles;
+        } else {
+            document.title = "Results from youtube.com"
+        }
+
+        function search() {
+            var q = document.getElementById("search").value;
+            var url = "/search?q=" + q;
+            window.location = url;
+        }
+    </script>
+    <div>
+        <div class=center_s>
+            <div style="margin-bottom:5px;" id=youtubeprev>Youtube Video previews are now supported!
+                </script>
+            </div>
+            <input class=rc id=search placeholder=search>
+            <button class=rc id=s-button onclick="search()">search</button>
+            <br>
+
+            <div id=content style="display:none;"></div>
+            <div id=skelly class=skelly style="margin-top: 20px;">
+                <span style="font-size: 12px;color:#000;-moz-border-radius: 10px;-webkit-border-radius: 10px;border-radius: 10px;" class=skelly_btn>Loading Videos</span>
+                <div>
+                    <div>
+                        <button id=skelly_div style="height:225px;width:400px;margin-top:30px;"></button>
+                    </div>
+                    <button class=skelly_btn id=skelly_btn style="margin-top: 10px;"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script>
+        document.getElementById("search").onkeyup = function(e) {
+            if (e.keyCode == 13) {
+                search()
+            }
+        }
+        var b = document.getElementById("s-button");
+        b.onmouseover = function() {
+            b.style.boxShadow = "3px 3px #d9dce0";
+        }
+        b.onmouseout = function() {
+            b.style.boxShadow = "0px 0px #d9dce0";
+
+        }
+        b.ontouchstart = function() {
+            b.style.boxShadow = "3px 3px #d9dce0";
+        }
+        b.ontouchend = function() {
+            b.style.boxShadow = "0px 0px #d9dce0";
+
+        }
+        var req = new Request("/search/fetch/", {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'q=' + encodeURIComponent("{{q|safe}}")
+        });
+        fetch(req)
+            .then(response => response.text()).then(response => {
+                gen_results(response);
+            }).then(function(result) {
+                console.log(result);
+            }).catch(function(error) {
+                var div = document.createElement("div");
+                div.style.color = 'red';
+                div.innerText = error;
+                document.getElementById('youtubeprev').appendChild(div);
+            });
+
+        function gen_results(json_data) {
+            document.getElementById("skelly").style.display = "none";
+            document.getElementById("content").style.display = "block";
+            var json_data = JSON.parse(json_data);
+            for (var i = 0; i < json_data['data'].length; i++) {
+                var a = document.createElement("a");
+                var img = document.createElement("img");
+                img.setAttribute("class", "rounded-image");
+                img.src = json_data['data'][i]['thumb'];
+                var title = json_data['data'][i]['title'];
+                var link = json_data['data'][i]['url'];
+                var channel = json_data['data'][i]['channel'];
+                var channel_url = json_data['data'][i]['channel_url'];
+                img.setAttribute("data-motion", json_data['data'][i]['preview']);
+                img.setAttribute("data-img", json_data['data'][i]['thumb']);
+                img.setAttribute("alt", "No Preview available or your browser does not support webp images");
+                img.style.display = 'inline-block';
+                a.target = "_blank";
+                a.href = link;
+                a.appendChild(img);
+                a.appendChild(document.createElement("br"));
+                var bold = document.createElement("b");
+                bold.innerHTML = title;
+                a.appendChild(bold);
+                var ch_url = document.createElement("a");
+                ch_url.href = channel_url;
+                ch_url.target = "_blank";
+                ch_url.innerHTML = channel;
+                img.onmouseover = function() {
+                    this.src = this.getAttribute("data-motion");
+                }
+                img.onmouseout = function() {
+                    this.src = this.getAttribute("data-img");
+
+                }
+                img.ontouchstart = function() {
+                    this.src = this.getAttribute("data-motion");
+                }
+                img.ontouchend = function() {
+                    this.src = this.getAttribute("data-img");
+                }
+                var sp = document.createElement("div");
+                sp.innerHTML = "Video By:";
+                sp.appendChild(ch_url);
+                sp.appendChild(document.createElement("br"));
+                sp.appendChild(document.createElement("br"));
+                document.getElementById("content").appendChild(a);
+                document.getElementById("content").appendChild(sp);
+
+            }
+            return "Created Results"
+        }
+    </script>
+</body>
+
+</html>
