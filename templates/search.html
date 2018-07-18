@@ -103,26 +103,6 @@
 </head>
 
 <body>
-    <script>
-        function decodehtml(html) {
-            var txt = document.createElement("textarea");
-            txt.innerHTML = html;
-            return txt.value;
-        }
-        var doctitle = decodehtml(decodehtml("{{q}}"));
-        if (doctitle.length != 0) {
-            var titles = "Results for " + doctitle
-            document.title = titles;
-        } else {
-            document.title = "Results from youtube.com"
-        }
-
-        function search() {
-            var q = document.getElementById("search").value;
-            var url = "/search?q=" + q;
-            window.location = url;
-        }
-    </script>
     <div>
         <div class=center_s>
             <div style="margin-bottom:5px;" id=youtubeprev>Youtube Video previews are now supported!
@@ -146,6 +126,24 @@
     </div>
     </div>
     <script>
+        function decodehtml(html) {
+            var txt = document.createElement("textarea");
+            txt.innerHTML = html;
+            return txt.value;
+        }
+        var doctitle = decodehtml(decodehtml("{{q}}"));
+        if (doctitle.length != 0) {
+            var titles = "Results for " + doctitle
+            document.title = titles;
+        } else {
+            document.title = "Results from youtube.com"
+        }
+
+        function search() {
+            var q = document.getElementById("search").value;
+            var url = "/search?q=" + q;
+            window.location = url;
+        }
         document.getElementById("search").onkeyup = function(e) {
             if (e.keyCode == 13) {
                 search()

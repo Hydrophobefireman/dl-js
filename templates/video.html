@@ -10,17 +10,106 @@
             margin-right: auto;
             text-align: center;
         }
+        
+        a {
+            color: #000
+        }
+        
+        .ipgs,
+        .proxy_403 {
+            -moz-border-radius: 20px;
+            -webkit-border-radius: 20px;
+            border-radius: 20px;
+            padding: 8px;
+            border: 1px solid #DFE1E5;
+            width: 100%;
+            outline: none;
+            background: white;
+            text-transform: uppercase;
+            cursor: pointer;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            transition: 0.5s;
+        }
+        
+        .center_stuff {
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+        }
+        
+        .skelly_btn {
+            -moz-border-radius: 100px;
+            -webkit-border-radius: 100px;
+            border-radius: 100px;
+            padding: 8px;
+            border: none;
+            width: 25%;
+            outline: none;
+            background: #e3e3e3;
+            color: white;
+            text-transform: uppercase;
+            cursor: inherit;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            transition: 1.5s;
+        }
+        
+        #skelly_div {
+            padding: 8px;
+            border: none;
+            outline: none;
+            background: #e3e3e3;
+            color: #000;
+            text-transform: uppercase;
+            cursor: inherit;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            transition: 1.5s;
+        }
     </style>
 </head>
 
 <body>
+    <button class=ipgs style="width:auto;display:none;" id=dlfail onclick="offer_proxy()">If downloads fail,try this button</button>
     <div class='main'>
         <div class=box>
+            <div id=skelly>
+                <span style="font-size: 12px;color:#000;-moz-border-radius: 10px;-webkit-border-radius: 10px;border-radius: 10px;" class=skelly_btn>Loading Your Video</span>
+                <div>
+                    <button id=skelly_div style="height:225px;width:400px;margin-top:10px;"></button>
+                </div>
+                <div>
+                    <button class=skelly_btn id=skelly_btn style="margin-top: 10px;"></button>
+                    <div>
+                        <button class=skelly_btn id=skelly_btn style="margin-top: 10px;width:5%;"></button>
+                    </div>
+                </div>
+            </div>
             <div class=content>
-                <div class=err>H</div>
+                <div class=err id=errs style="color:red"></div>
+                <a href='#' id=btn-mp3url><button class=ipgs id=btn-mp3 style="display: none"></button></a>
+                <div id=videos>
+                </div>
             </div>
         </div>
     </div>
+    <script src='/static/js/utils.js'></script>
+    <script>
+        get_videos("{{url|safe}}")
+    </script>
 </body>
 
 </html>

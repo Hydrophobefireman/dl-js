@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <title>Multiple Videos Available</title>
+    <style>
+        .ipg,
+        .ipgs {
+            -moz-border-radius: 20px;
+            -webkit-border-radius: 20px;
+            border-radius: 20px;
+            padding: 8px;
+            border: 1px solid #DFE1E5;
+            width: 100%;
+            outline: none;
+            background: white;
+            text-transform: uppercase;
+            cursor: pointer;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            transition: 0.5s;
+        }
+        
+        .ipgs {
+            height: inherit;
+            transition: 0.7s;
+        }
+        
+        shows_s {
+            height: inherit;
+        }
+        
+        a {
+            text-decoration: none
+        }
+        
+        .cst {
+            margin-right: auto;
+            margin-left: auto;
+            text-align: center;
+        }
+        
+        #siterows {
+            transition: 0.5s;
+            height: 0px;
+            display: none;
+        }
+        
+        .result_holder {
+            transition: 0.6s;
+            height: inherit;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        function decodehtml(html) {
+            var txt = document.createElement("textarea");
+            txt.innerHTML = html;
+            return txt.value;
+        }
+
+        function extractHostname(url) {
+            var hostname;
+            if (url.indexOf("://") > -1) {
+                hostname = url.split('/')[2];
+            } else {
+                hostname = url.split('/')[0];
+            }
+            hostname = hostname.split(':')[0];
+            hostname = hostname.split('?')[0];
+
+            return hostname;
+        }
+    </script>
+    <div class=cst>
+        <div id=main>
+            <div style="margin-top:30px;">
+                <span>Your Search from:
+                    <strong>
+                        <span data={{url|safe}} id=spcl></span>
+                </strong>
+                </span> is a supported video streaming site</span>
+                <span>We have videos Available from </span>
+                <div style="margin-top: 20px;width:100%;">
+
+                    <button class=ipg id=show_sites>
+                        <span style="font-size: 18px;padding:4px;">
+                            <strong>&#9776;</strong>
+                        </span> {{number_}} sites Click To
+                        <span id=prs_ch>Show</span>
+                    </button>
+
+                    <div id=siterows style="display:none;margin-top:10px;" class=srows>
+
+                        <script>
+                            var spcl_sp = document.getElementById("spcl")
+                            spcl_sp.innerText = extractHostname(spcl_sp.getAttribute("data"))
+                        </script>
+                        {% for u in urls %}
+                        <script>
+                            var a = document.createElement("a");
+                            var div = document.createElement("div");
+                            var btn = document.createElement("button");
+                            btn.setAttribute("class", "ipgs");
+                            btn.innerHTML = extractHostname("{{u}}");
+                            div.appendChild(btn);
+                            a.appendChild(div)
+                            a.href = "/video?url=" + encodeURIComponent(decodehtml("{{u}}"));
+                            document.getElementById('siterows').appendChild(a);
+                            a.style.height = "inherit"
+                        </script>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        var prs = document.getElementById("show_sites");
+        prs.onclick = function() {
+            var strows = document.getElementById("siterows");
+            if (strows.style.display == "none") {
+                document.getElementById("prs_ch").innerText = "hide";
+                strows.style.display = "block";
+                strows.style.maxHeight = "100%";
+                strows.style.height = "100%";
+            } else {
+                document.getElementById("prs_ch").innerText = "show";
+                strows.style.display = "none";
+                strows.style.maxHeight = "0%";
+                strows.style.height = "0px";
+
+            }
+        }
+    </script>
+
+
+</body>

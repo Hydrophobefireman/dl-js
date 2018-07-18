@@ -23,7 +23,7 @@ function extract_data(data) {
     html = data['html'];
     trending = data['trending'];
     console.log(trending);
-    regex = new RegExp(/ytInitialData\"]\s=\s({.*?});/, 'gms');
+    regex = new RegExp(/ytInitialData\"]\s=\s({[\s\S]*?});/, 'gm');
     json_data = {};
     json_data['data'] = [];
     videos = [];
@@ -62,7 +62,7 @@ function extract_data(data) {
         } catch (e) {
             var preview = null
         };
-        var video_url = "/video?url=" + encodeURIComponent("https://youtu.be/%s" + videoId);
+        var video_url = "/video?url=" + encodeURIComponent("https://youtu.be/" + videoId);
         json_data['data'].push({
             "url": video_url,
             "thumb": thumb,
@@ -92,7 +92,6 @@ function gen_results(json_data) {
         img.setAttribute("data-img", json_data['data'][i]['thumb']);
         img.setAttribute("alt", "No Preview available or your browser does not support webp images");
         img.style.display = 'inline-block';
-        a.target = "_blank";
         a.href = link;
         a.appendChild(img);
         a.appendChild(document.createElement("br"));
@@ -101,7 +100,6 @@ function gen_results(json_data) {
         a.appendChild(bold);
         var ch_url = document.createElement("a");
         ch_url.href = channel_url;
-        ch_url.target = "_blank";
         ch_url.innerHTML = channel;
         img.onmouseover = function() {
             this.src = this.getAttribute("data-motion");
