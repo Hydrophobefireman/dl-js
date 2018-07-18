@@ -166,77 +166,10 @@
             b.style.boxShadow = "0px 0px #d9dce0";
 
         }
-        var req = new Request("/search/fetch/", {
-            method: 'post',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'q=' + encodeURIComponent("{{q|safe}}")
-        });
-        fetch(req)
-            .then(response => response.text()).then(response => {
-                gen_results(response);
-            }).then(function(result) {
-                console.log(result);
-            }).catch(function(error) {
-                var div = document.createElement("div");
-                div.style.color = 'red';
-                div.innerText = error;
-                document.getElementById('youtubeprev').appendChild(div);
-            });
-
-        function gen_results(json_data) {
-            document.getElementById("skelly").style.display = "none";
-            document.getElementById("content").style.display = "block";
-            var json_data = JSON.parse(json_data);
-            for (var i = 0; i < json_data['data'].length; i++) {
-                var a = document.createElement("a");
-                var img = document.createElement("img");
-                img.setAttribute("class", "rounded-image");
-                img.src = json_data['data'][i]['thumb'];
-                var title = json_data['data'][i]['title'];
-                var link = json_data['data'][i]['url'];
-                var channel = json_data['data'][i]['channel'];
-                var channel_url = json_data['data'][i]['channel_url'];
-                img.setAttribute("data-motion", json_data['data'][i]['preview']);
-                img.setAttribute("data-img", json_data['data'][i]['thumb']);
-                img.setAttribute("alt", "No Preview available or your browser does not support webp images");
-                img.style.display = 'inline-block';
-                a.target = "_blank";
-                a.href = link;
-                a.appendChild(img);
-                a.appendChild(document.createElement("br"));
-                var bold = document.createElement("b");
-                bold.innerHTML = title;
-                a.appendChild(bold);
-                var ch_url = document.createElement("a");
-                ch_url.href = channel_url;
-                ch_url.target = "_blank";
-                ch_url.innerHTML = channel;
-                img.onmouseover = function() {
-                    this.src = this.getAttribute("data-motion");
-                }
-                img.onmouseout = function() {
-                    this.src = this.getAttribute("data-img");
-
-                }
-                img.ontouchstart = function() {
-                    this.src = this.getAttribute("data-motion");
-                }
-                img.ontouchend = function() {
-                    this.src = this.getAttribute("data-img");
-                }
-                var sp = document.createElement("div");
-                sp.innerHTML = "Video By:";
-                sp.appendChild(ch_url);
-                sp.appendChild(document.createElement("br"));
-                sp.appendChild(document.createElement("br"));
-                document.getElementById("content").appendChild(a);
-                document.getElementById("content").appendChild(sp);
-
-            }
-            return "Created Results"
-        }
+    </script>
+    <script src='/static/js/youtube-search.js'></script>
+    <script>
+        get_data("{{q|safe}}")
     </script>
 </body>
 
