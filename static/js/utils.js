@@ -12,10 +12,8 @@ function get_yt_id(url) {
         return parseqs(url.search).v;
     }
 }
-var yt_recursion_lim = 0
 
 function youtube(page, url) {
-    yt_recursion_lim += 1;
     var mp3_ = document.getElementById("btn-mp3");
     mp3_.style.display = 'block'
     var data = {};
