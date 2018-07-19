@@ -214,7 +214,7 @@ function get_videos(url) {
                 document.getElementById("errs").innerHTML = "An Unknown Error Occured"
             }
             console.log(data);
-            if (data != null) {
+            if (data != 'undefined') {
                 /* to prevent errors with async youtube signature decryption 
                 for other websites.it shouldn't matter */
                 create_video(data);
