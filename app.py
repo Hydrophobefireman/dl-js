@@ -123,6 +123,8 @@ def get_funcname(url):
     if re.search(r"^(https?:)?//.*\.?estream", url, re.IGNORECASE) is not None:
         return "estream"
     elif re.search(r"^(https?:)?//.*\.?yourupload\.", url, re.IGNORECASE) is not None:
+        if "/watch/" in url:
+            url = url.replace("/watch/", "/embed/")
         return "yourupload"
     elif re.search(r"^(https?:)?//.*\.?dailymotion\.", url, re.IGNORECASE) is not None:
         return "dailymotion"

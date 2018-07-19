@@ -18,8 +18,8 @@ function yourupload(page, base_url) {
     data['video_urls'] = [];
     parser = new DOMParser();
     page = parser.parseFromString(page, 'text/html');
-    re = /((?<=file:\s').*?mp4(?=\',))/;
-    url = re.exec(page.body.innerHTML)[0];
+    re = /file:\s'(.*?mp4)(?=\',)/;
+    url = re.exec(page.body.innerHTML)[1];
     data['video_urls'].push({ "url": url, "quality": "Highest" });
     data['base_url'] = base_url;
     data['thumbnail'] = page.querySelector("meta[property='og:image']").getAttribute("content");
@@ -34,9 +34,11 @@ function youtube(page, url) {
     data['youtube'] = true;
     parser = new DOMParser();
     page = parser.parseFromString(page, 'text/html');
-    re = new RegExp('((?<=ytplayer.config = ).*?(?=;ytplayer.))');
+    re = new RegExp(/ytplayer.config\s=\s(.*?)(?=;ytplayer.)/, 'm');
     try {
-        js = JSON.parse(re.exec(page.body.innerHTML)[0]);
+        var tmp = re.exec(page.body.innerHTML)[1];
+        console.log(tmp);
+        js = JSON.parse(tmp);
     } catch (e) {
         document.getElementById("errs").innerHTML = 'An Unknown Error occured';
         document.getElementById("errs").style.color = 'red';
