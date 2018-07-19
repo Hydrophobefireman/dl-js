@@ -134,6 +134,8 @@ def get_funcname(url):
         return "rapidvideo", url
     elif re.search(r"^(https?:)?//.*?\.?(youtube\.|youtu\.be|yt\.be)", url) is not None:
         return "youtube", url
+    elif re.search(r"^https?://(.{3})?\.?(streamango|streamago|streamcloud)", url, re.IGNORECASE) is not None:
+        return "streamango", url
     else:
         return False, None
 

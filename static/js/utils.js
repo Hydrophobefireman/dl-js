@@ -1,5 +1,13 @@
 parser = new DOMParser();
 
+function og_search(page, what) {
+    var resp = page.querySelector("meta[property='og:" + what + "']") || page.querySelector("meta[name='og:" + what + "']") || page.querySelector("meta[itemprop='og:" + what + "']");
+    if (resp) {
+        return resp.getAttribute("content")
+    }
+    return resp
+}
+
 function decodehtml(html) {
     var txt = document.createElement("textarea");
     txt.innerHTML = html;
@@ -21,7 +29,7 @@ function instagram(page, base_url) {
     data['video_urls'] = [];
     page = parser.parseFromString(page, 'text/html');
     data['title'] = page.title;
-    data['thumbnail'] = page.querySelector("meta[property='og:image']").getAttribute("content");
+    data['thumbnail'] = og_search(page, 'image');
     video = page.querySelector("meta[property='og:video']");
     if (video == null) {
         data.image__ = data.thumbnail;
@@ -34,6 +42,31 @@ function instagram(page, base_url) {
 
     }
     return data;
+}
+
+function streamango(page, base_url) {
+    var re = new RegExp(/eval\(function\(p[\s\S]*?var\s*?srces=[\s\S]*?}\);/);
+    var data = {};
+    data['video_urls'] = [];
+    page = parser.parseFromString(page, 'text/html');
+    script_ = re.exec(page.body.innerHTML)[0];
+    eval(script_);
+    data['title'] = og_search(page, 'title');
+    data['thumbnail'] = og_search(page, 'image');
+    data['base_url'] = base_url;
+    for (t in srces) {
+        ret = srces[t];
+        url = ret.src;
+        if (url.indexOf("http") == -1) {
+            url = "https:" + url
+        }
+        q = ret.height;
+        data['video_urls'].push({
+            "url": url,
+            "quality": q
+        });
+    }
+    return data
 }
 
 function rapidvideo(page, base_url) {
@@ -57,10 +90,7 @@ function estream(page, base_url) {
     data['video_urls'] = [];
     page = parser.parseFromString(page, 'text/html');
     data['title'] = page.title;
-    thumbnail = page.querySelector("meta[property='og:image']");
-    if (thumbnail) {
-        thumbnail = thumbnail.getAttribute("content");
-    }
+    thumbnail = og_search(page, "image")
     data['thumbnail'] = thumbnail || "//null";
     data['base_url'] = base_url;
     sources = page.getElementsByTagName("source");
@@ -86,8 +116,8 @@ function yourupload(page, base_url) {
     url = re.exec(page.body.innerHTML)[1];
     data['video_urls'].push({ "url": url, "quality": "Highest" });
     data['base_url'] = base_url;
-    data['thumbnail'] = page.querySelector("meta[property='og:image']").getAttribute("content");
-    data['title'] = page.querySelector("meta[property='og:title']").getAttribute("content");
+    data['thumbnail'] = og_search(page, 'image')
+    data['title'] = og_search(page, 'title') || page.title;
     return data;
 }
 
