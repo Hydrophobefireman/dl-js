@@ -60,6 +60,7 @@ function youtube(page, url) {
     var highest = 0;
     if (audio_urls == undefined) {
         mp3_.innerHTML = "No audio url found for this video";
+        data.ytaudio = false;
     } else {
         audio_urls = audio_urls.split(",");
         mp3_.innerHTML = "Click here for mp3 version of this video";
@@ -129,7 +130,7 @@ function youtube_signatures(urls, data, url) {
 }
 
 function create_video(data) {
-    if (data.youtube) {
+    if (data.youtube && data.ytaudio) {
         document.getElementById("btn-mp3url").href = "/mp3extract/?mp3u=" + encodeURIComponent(data.audio_url[0]['url']);
     }
     json_data = data;
