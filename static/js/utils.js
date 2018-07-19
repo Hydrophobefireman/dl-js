@@ -37,7 +37,6 @@ function youtube(page, url) {
     re = new RegExp(/ytplayer.config\s=\s(.*?)(?=;ytplayer.)/, 'm');
     try {
         var tmp = re.exec(page.body.innerHTML)[1];
-        console.log(tmp);
         js = JSON.parse(tmp);
     } catch (e) {
         document.getElementById("errs").innerHTML = 'An Unknown Error occured';
@@ -58,6 +57,7 @@ function youtube(page, url) {
     urls = js['args']['url_encoded_fmt_stream_map'].split(",");
     audio_urls = js["args"]["adaptive_fmts"];
     var highest = 0;
+    data.ytaudio = true;
     if (audio_urls == undefined) {
         mp3_.innerHTML = "No audio url found for this video";
         data.ytaudio = false;
