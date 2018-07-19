@@ -57,7 +57,7 @@ def get_video():
         url = check_for_redirects(url)
     except:
         return json.dumps({'error': 'not-supported'})
-    func_name = get_funcname(url)
+    func_name, url = get_funcname(url)
     if not func_name:
         return json.dumps({'error': 'not-supported'})
     page = requests.get(url, headers=basic_headers, allow_redirects=True).text
@@ -121,23 +121,21 @@ def send_files():
 
 def get_funcname(url):
     if re.search(r"^(https?:)?//.*\.?estream", url, re.IGNORECASE) is not None:
-        return "estream"
+        return "estream", url
     elif re.search(r"^(https?:)?//.*\.?yourupload\.", url, re.IGNORECASE) is not None:
         if "/watch/" in url:
             url = url.replace("/watch/", "/embed/")
-        return "yourupload"
-    elif re.search(r"^(https?:)?//.*\.?dailymotion\.", url, re.IGNORECASE) is not None:
-        return "dailymotion"
-    elif re.search(r"^(https?:)?//.*\.?watcheng\.", url, re.IGNORECASE) is not None:
-        return "watcheng"
+        return "yourupload", url
+    elif re.search(r"^(https?:)?//.*\.?watcheng", url, re.IGNORECASE) is not None:
+        return "watcheng", url
     elif re.search(r"^(https?:)?//.*\.?instag\.?ram\.?", url) is not None:
-        return "instagram"
+        return "instagram", url
     elif re.search(r"^(https?:)?//.*\.?rapidvideo\.", url, re.IGNORECASE) is not None:
-        return "rapidvideo"
+        return "rapidvideo", url
     elif re.search(r"^(https?:)?//.*?\.?(youtube\.|youtu\.be|yt\.be)", url) is not None:
-        return "youtube"
+        return "youtube", url
     else:
-        return False
+        return False, None
 
 
 @app.errorhandler(404)

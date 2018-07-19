@@ -1,3 +1,5 @@
+parser = new DOMParser();
+
 function decodehtml(html) {
     var txt = document.createElement("textarea");
     txt.innerHTML = html;
@@ -13,10 +15,72 @@ function get_yt_id(url) {
     }
 }
 
+function instagram(page, base_url) {
+    var data = [];
+    data['base_url'] = base_url;
+    data['video_urls'] = [];
+    page = parser.parseFromString(page, 'text/html');
+    data['title'] = page.title;
+    data['thumbnail'] = page.querySelector("meta[property='og:image']").getAttribute("content");
+    video = page.querySelector("meta[property='og:video']");
+    if (video == null) {
+        data.image__ = data.thumbnail;
+        return data
+    } else {
+        data['video_urls'].push({
+            "url": video.getAttribute("content"),
+            "quality": "default"
+        });
+
+    }
+    return data;
+}
+
+function rapidvideo(page, base_url) {
+    return estream(page, base_url)
+}
+
+function watcheng(page, base_url) {
+    var data = [];
+    data['video_urls'] = [];
+    page = parser.parseFromString(page, 'text/html');
+    data['title'] = page.title;
+    data['thumbnail'] = page.getElementsByTagName("video")[0].getAttribute("poster");
+    data['base_url'] = base_url;
+    sources = page.getElementsByTagName("source")[0];
+    data['video_urls'].push({ "url": sources.src, "quality": "default" });
+    return data;
+}
+
+function estream(page, base_url) {
+    var data = [];
+    data['video_urls'] = [];
+    page = parser.parseFromString(page, 'text/html');
+    data['title'] = page.title;
+    thumbnail = page.querySelector("meta[property='og:image']");
+    if (thumbnail) {
+        thumbnail = thumbnail.getAttribute("content");
+    }
+    data['thumbnail'] = thumbnail || "//null";
+    data['base_url'] = base_url;
+    sources = page.getElementsByTagName("source");
+    for (var i = 0; i < sources.length; i++) {
+        el = sources[i];
+        if (el.getAttribute("src").indexOf("m3u8") == -1) {
+            data['video_urls'].push({
+                "url": el.getAttribute("src"),
+                "quality": el.getAttribute("res") || el.getAttribute("label") || el.getAttribute("data-res")
+            })
+        }
+    }
+    return data
+
+}
+
 function yourupload(page, base_url) {
     var data = {};
     data['video_urls'] = [];
-    parser = new DOMParser();
+
     page = parser.parseFromString(page, 'text/html');
     re = /file:\s'(.*?mp4)(?=\',)/;
     url = re.exec(page.body.innerHTML)[1];
@@ -32,7 +96,7 @@ function youtube(page, url) {
     mp3_.style.display = 'block'
     var data = {};
     data['youtube'] = true;
-    parser = new DOMParser();
+    data['base_url'] = url;
     page = parser.parseFromString(page, 'text/html');
     re = new RegExp(/ytplayer.config\s=\s(.*?)(?=;ytplayer.)/, 'm');
     try {
@@ -49,7 +113,6 @@ function youtube(page, url) {
     var title = js.args.title;
     var basejs = "https://www.youtube.com" + js["assets"]["js"];
     var thumbnail = "https://i.ytimg.com/vi/" + js.args.video_id + "/hqdefault.jpg" || js.args.thumbnail_url;
-    data['base_url'] = url.href;
     data['title'] = title;
     data['basejs'] = basejs;
     data['thumbnail'] = thumbnail;
@@ -79,7 +142,7 @@ function youtube(page, url) {
     if (parseqs(urls[0]).s != null) {
         console.log("Fetch Signature Functions");
         youtube_signatures(urls, data, data['basejs']);
-        return null;
+        return undefined;
     } else {
         for (var i = 0; i < urls.length; i++) {
             qs = parseqs(urls[i]);
@@ -130,6 +193,13 @@ function youtube_signatures(urls, data, url) {
 }
 
 function create_video(data) {
+    if (data.image__) {
+        document.body.innerHTML = "<img src=" + data.image__ + ">";
+        var b = document.createElement("div");
+        b.innerHTML = data.title;
+        document.body.appendChild(b);
+        return undefined
+    }
     if (data.youtube && data.ytaudio) {
         document.getElementById("btn-mp3url").href = "/mp3extract/?mp3u=" + encodeURIComponent(data.audio_url[0]['url']);
     }
@@ -207,12 +277,17 @@ function get_videos(url) {
     fetch(req)
         .then(ret => ret.json())
         .then(res => {
+            if (res.hasOwnProperty("error")) {
+                document.getElementById("errs").innerHTML = res.error;
+                return undefined;
+            }
             page = res.html;
             funcname = res.funcname;
             try {
                 data = window[funcname](page, url);
             } catch (e) {
                 document.getElementById("errs").innerHTML = "An Unknown Error Occured"
+                throw (e);
             }
             console.log(data);
             if (typeof data != 'undefined') {
