@@ -1,4 +1,19 @@
 parser = new DOMParser();
+/*modified 
+http://matthewfl.com/js/unPacker.js */
+function unpack(code) {
+    var env = {
+        eval: function(c) {
+            code = c;
+        },
+        window: {},
+        document: {}
+    };
+    eval("with(env) {" + code + "}");
+    code = (code + "").replace(/;/g, ";\n").replace(/{/g, "\n{\n").replace(/}/g, "\n}\n").replace(/\n;\n/g, ";\n").replace(/\n\n/g, "\n");
+    return code;
+
+}
 
 function og_search(page, what) {
     var resp = page.querySelector("meta[property='og:" + what + "']") || page.querySelector("meta[name='og:" + what + "']") || page.querySelector("meta[itemprop='og:" + what + "']");
@@ -21,6 +36,24 @@ function get_yt_id(url) {
     } else {
         return parseqs(url.search).v;
     }
+}
+
+function vidzi(page, base_url) {
+    var data = [];
+    data['base_url'] = base_url;
+    data['video_urls'] = [];
+    data['thumbnail'] = 'http://null';
+    funcre = /eval\(function\(p[\s\S]*?\)\)\)/;
+    page = parser.parseFromString(page, 'text/html');
+    evald = unpack(funcre.exec(page.body.innerHTML)[0]);
+    data['title'] = page.title;
+    mp4re = /file:"(http.*?mp4)"/;
+    url = mp4re.exec(evald)[1];
+    data['video_urls'].push({
+        "url": url,
+        "quality": "highest"
+    });
+    return data
 }
 
 function instagram(page, base_url) {
@@ -310,6 +343,10 @@ function get_videos(url) {
             if (res.hasOwnProperty("error")) {
                 document.getElementById("errs").innerHTML = res.error;
                 return undefined;
+            }
+            if (res.hasOwnProperty("redirect")) {
+                document.getElementById("errs").innerHTML = "Redirecting to server extractor";
+                window.location = res.redirect;
             }
             page = res.html;
             funcname = res.funcname;

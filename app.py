@@ -3,7 +3,7 @@ import streamsites
 import re
 
 import requests
-from urllib.parse import unquote
+from urllib.parse import unquote, quote
 from flask import (Flask, Response, make_response, redirect, render_template, stream_with_context,
                    request, send_file, session)
 from htmlmin.minify import html_minify
@@ -57,6 +57,11 @@ def get_video():
         url = check_for_redirects(url)
     except:
         return json.dumps({'error': 'not-supported'})
+    reg = r"^https?://(.{3})?\.?(oload|openload|daclips|thevideo|vev.io)"
+    if re.search(reg, url) is not None:
+        redirect = "https://proxy-py.herokuapp.com/api/parse_query?url=%s" % (
+            quote(url))
+        return json.dumps({"url": url, "download": True, "site": re.search(reg, url).group(), "redirect": redirect})
     func_name, url = get_funcname(url)
     if not func_name:
         return json.dumps({'error': 'not-supported'})
@@ -130,6 +135,8 @@ def get_funcname(url):
         return "watcheng", url
     elif re.search(r"^(https?:)?//.*\.?instag\.?ram\.?", url) is not None:
         return "instagram", url
+    elif re.search(r"^(https?:)?//.*\.?vidzi\.?", url) is not None:
+        return "vidzi", url
     elif re.search(r"^(https?:)?//.*\.?rapidvideo\.", url, re.IGNORECASE) is not None:
         return "rapidvideo", url
     elif re.search(r"^(https?:)?//.*?\.?(youtube\.|youtu\.be|yt\.be)", url) is not None:
