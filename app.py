@@ -75,7 +75,6 @@ def sig_func_name():
 def check_for_redirects(url):
     sess = requests.Session()
     u = sess.head(url, headers=basic_headers, allow_redirects=True)
-
     if re.search(r"https?://(www\.)?google\.co.*?\/url", u.url) is not None:
         url = re.search(r"URL='(?P<url>.*?)'",
                         sess.get(u.url, allow_redirects=True).text, re.IGNORECASE)
