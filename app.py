@@ -3,7 +3,8 @@ import streamsites
 import re
 
 import requests
-from flask import (Flask, Response, make_response, redirect, render_template,
+from urllib.parse import unquote
+from flask import (Flask, Response, make_response, redirect, render_template, stream_with_context,
                    request, send_file, session)
 from htmlmin.minify import html_minify
 app = Flask(__name__)
@@ -81,6 +82,41 @@ def check_for_redirects(url):
         return url.group("url")
     else:
         return u.url
+
+
+@app.route("/fetch_url/")
+def proxy_download():
+    url = request.args.get("u")
+    ref = request.args.get("referer")
+    req = requests.Session().head(
+        url, headers={"User-Agent": ua, "Referer": ref}, allow_redirects=True)
+    print(req.headers)
+    url = req.url
+    req_data = req.headers
+    accept_ranges = req_data.get("Accept-Ranges")
+    if str(accept_ranges).lower() != 'none':
+        # for Accept-Ranges:None headers
+        accept_ranges = 'true'
+    else:
+        accept_ranges = 'false'
+    mt = req_data.get("Content-Type") or "application/octet-stream"
+    session['content-type'] = mt
+    filesize = req_data.get("Content-Length") or 0
+    return render_template("send_blob.html", r=url, ref=ref, mimetype_=mt, filesize=filesize, accept_ranges=accept_ranges)
+
+
+@app.route("/proxy/f/")
+def send_files():
+    user_agent = request.headers.get("User-Agent") or ua
+    url = unquote(request.args.get("u"))
+    range_ = request.args.get("range") or "0-"
+    referer = request.args.get("referer")
+    print(range_)
+    print("Downloading:'"+url[:50]+"...'")
+    sess = requests.Session()
+    r = sess.get(url, headers={"User-Agent": user_agent, "Referer": referer, "range": "Bytes=%s" % (range_)},
+                 stream=True)
+    return Response(stream_with_context(r.iter_content(chunk_size=5000)), content_type=session["content-type"])
 
 
 def get_funcname(url):

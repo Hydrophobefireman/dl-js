@@ -13,6 +13,20 @@ function get_yt_id(url) {
     }
 }
 
+function yourupload(page, base_url) {
+    var data = {};
+    data['video_urls'] = [];
+    parser = new DOMParser();
+    page = parser.parseFromString(page, 'text/html');
+    re = /((?<=file:\s').*?mp4(?=\',))/;
+    url = re.exec(page.body.innerHTML)[0];
+    data['video_urls'].push({ "url": url, "quality": "Highest" });
+    data['base_url'] = base_url;
+    data['thumbnail'] = page.querySelector("meta[property='og:image']").getAttribute("content");
+    data['title'] = page.querySelector("meta[property='og:title']").getAttribute("content");
+    return data;
+}
+
 function youtube(page, url) {
     var mp3_ = document.getElementById("btn-mp3");
     mp3_.style.display = 'block'
@@ -28,7 +42,7 @@ function youtube(page, url) {
         document.getElementById("errs").style.color = 'red';
         console.log(e);
         window.location = '//dl-py.herokuapp.com/video?url=' + encodeURIComponent(url);
-        //not gonna send a basejs,embed page and get_video_info to the user 
+        //not gonna send a basejs,embed page and get_video_info file  to the user 
         alert("Age Restricted Video Detected.using python parser");
     }
     var title = js.args.title;
@@ -152,7 +166,7 @@ function create_video(data) {
         proxy_.style.display = "none";
         proxy_.innerHTML = "View this video";
         proxy_.onclick = function() {
-            window.location = "/set_url/?mt=video%2Fmp4&mp3u=" + encodeURIComponent(url);
+            window.location = "/fetch_url/?u=" + encodeURIComponent(url) + "&referer=" + encodeURIComponent(json_data['base_url']);
         }
         a2.innerText = "Direct Link to Video File";
         a1.appendChild(a2);
