@@ -71,7 +71,7 @@ def get_video():
     if not func_name:
         return json.dumps({'error': 'not-supported'})
     page = requests.get(url, headers=basic_headers, allow_redirects=True).text
-    return Response(json.dumps({"html": page, "funcname": func_name}), content_type='application/json')
+    return Response(json.dumps({"html": page, "funcname": func_name, "landing_url": url}), content_type='application/json')
 
 
 @app.route("/youtube/js/")

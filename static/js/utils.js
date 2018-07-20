@@ -283,6 +283,7 @@ function get_videos(url) {
             }
             page = res.html;
             funcname = res.funcname;
+            url = res.landing_url;
             try {
                 data = window[funcname](page, url);
             } catch (e) {
