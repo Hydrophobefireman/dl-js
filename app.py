@@ -167,9 +167,16 @@ def send_downloaded_file():
     print(request.headers)
     if not os.path.isfile(filename):
         return "No File"
+    fsize=os.path.getsize(filename)
     resp = make_response(send_from_directory(app.root_path, filename))
+    if "range" in request.headers:
+#Some download managers don't like an Accept Range:Byted header in ranged request
+        resp.headers.pop("Accept-Ranges")
+    if "Content-Range" not in resp.headers or str(resp.headers.get("Content-Range")).lower()=="bytes=0-":#Request headers are 0- or no header included
+        resp.headers["Content-Range"]="Bytes=0-%d/%d"%(fsize-1,fsize)
+    print(resp.headers)
     resp.headers["Content-Type"] = session.get(
-        'content-type') or unquote(request.args.get("mt"))
+        'content-type') or request.args.get("mt") or "application/octet-stream"
     return resp
 
 
