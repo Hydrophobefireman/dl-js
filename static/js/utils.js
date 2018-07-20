@@ -255,6 +255,61 @@ function youtube_signatures(urls, data, url) {
     xhr.send();
 }
 
+function offer_proxy() {
+    var els_ = document.getElementsByClassName("proxy_403");
+    for (var er = 0; er < els_.length; er++) {
+        els_[er].style.display = "block";
+    }
+}
+
+function get_videos(url) {
+    var req = new Request("/videos/fetch/", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: "url=" + encodeURIComponent(url)
+    });
+    fetch(req)
+        .then(ret => ret.json())
+        .then(res => {
+            if (res.hasOwnProperty("error")) {
+                document.getElementById("errs").innerHTML = res.error;
+                return undefined;
+            }
+            if (res.hasOwnProperty("redirect")) {
+                document.getElementById("errs").innerHTML = "Redirecting to server extractor";
+                window.location = res.redirect;
+            }
+            page = res.html;
+            funcname = res.funcname;
+            try {
+                data = window[funcname](page, url);
+            } catch (e) {
+                document.getElementById("errs").innerHTML = "An Unknown Error Occured"
+                throw (e);
+            }
+            console.log(data);
+            if (typeof data != 'undefined') {
+                /* to prevent errors with async youtube signature decryption 
+                for other websites.it shouldn't matter */
+                create_video(data);
+            }
+        })
+}
+
+function parseqs(query) {
+    var params = {};
+    query = ((query[0] == '?') ? query.substring(1) : query);
+    query = decodeURI(query);
+    var vars = query.split('&');
+    for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split('=');
+        params[pair[0]] = pair[1]
+    }
+    return params;
+}
+
 function create_video(data) {
     if (data.image__) {
         document.body.innerHTML = "<img src=" + data.image__ + ">";
@@ -320,59 +375,4 @@ function create_video(data) {
     div_.appendChild(prnt);
     document.getElementById("skelly").style.display = 'none';
     document.getElementById("dlfail").style.display = 'block';
-}
-
-function offer_proxy() {
-    var els_ = document.getElementsByClassName("proxy_403");
-    for (var er = 0; er < els_.length; er++) {
-        els_[er].style.display = "block";
-    }
-}
-
-function get_videos(url) {
-    var req = new Request("/videos/fetch/", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: "url=" + encodeURIComponent(url)
-    });
-    fetch(req)
-        .then(ret => ret.json())
-        .then(res => {
-            if (res.hasOwnProperty("error")) {
-                document.getElementById("errs").innerHTML = res.error;
-                return undefined;
-            }
-            if (res.hasOwnProperty("redirect")) {
-                document.getElementById("errs").innerHTML = "Redirecting to server extractor";
-                window.location = res.redirect;
-            }
-            page = res.html;
-            funcname = res.funcname;
-            try {
-                data = window[funcname](page, url);
-            } catch (e) {
-                document.getElementById("errs").innerHTML = "An Unknown Error Occured"
-                throw (e);
-            }
-            console.log(data);
-            if (typeof data != 'undefined') {
-                /* to prevent errors with async youtube signature decryption 
-                for other websites.it shouldn't matter */
-                create_video(data);
-            }
-        })
-}
-
-function parseqs(query) {
-    var params = {};
-    query = ((query[0] == '?') ? query.substring(1) : query);
-    query = decodeURI(query);
-    var vars = query.split('&');
-    for (var i = 0; i < vars.length; i++) {
-        var pair = vars[i].split('=');
-        params[pair[0]] = pair[1]
-    }
-    return params;
 }

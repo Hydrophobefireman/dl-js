@@ -1,19 +1,24 @@
 import json
-import streamsites
 import re
-
+import time
+import os
+from urllib.parse import quote, unquote
+import threading
 import requests
-from urllib.parse import unquote, quote
-from flask import (Flask, Response, make_response, redirect, render_template, stream_with_context,
-                   request, send_file, session)
+from flask import (Flask, Response, make_response, redirect, render_template,
+                   request, send_file, send_from_directory, session,
+                   stream_with_context)
 from htmlmin.minify import html_minify
+
+import streamsites
+import yt_sig
+
 app = Flask(__name__)
 try:
     from flask_compress import Compress
     Compress(app)
 except ImportError:
     pass
-import yt_sig
 ua = "Mozilla/5.0 (Windows; U; Windows NT 10.0; en-US)\
  AppleWebKit/604.1.38 (KHTML, like Gecko) Chrome/68.0.3325.162"
 app.secret_key = "7bf9a280"
@@ -98,30 +103,74 @@ def proxy_download():
     print(req.headers)
     url = req.url
     req_data = req.headers
-    accept_ranges = req_data.get("Accept-Ranges")
-    if str(accept_ranges).lower() != 'none':
-        # for Accept-Ranges:None headers
-        accept_ranges = 'true'
-    else:
-        accept_ranges = 'false'
     mt = req_data.get("Content-Type") or "application/octet-stream"
     session['content-type'] = mt
-    filesize = req_data.get("Content-Length") or 0
-    return render_template("send_blob.html", r=url, ref=ref, mimetype_=mt, filesize=filesize, accept_ranges=accept_ranges)
+    filesize = req_data.get("Content-Length")
+    if filesize is None:  # Web page or a small file probably
+        fils = requests.get(
+            url, headers={"User-Agent": ua, "Referer": ref}, stream=True)
+        return Response(stream_with_context(fils.iter_content(chunk_size=2048)), content_type=fils.headers.get("Content-Type"))
+    session['filesize'] = filesize
+    return render_template("send_blob.html", url=url, ref=ref)
 
 
 @app.route("/proxy/f/")
 def send_files():
+    print(session['filesize'])
     user_agent = request.headers.get("User-Agent") or ua
     url = unquote(request.args.get("u"))
-    range_ = request.args.get("range") or "0-"
     referer = request.args.get("referer")
-    print(range_)
     print("Downloading:'"+url[:50]+"...'")
+    session['filename'] = str(time.time())
+    filename = session['filename']
+    thread = threading.Thread(
+        target=threaded_req, args=(url, user_agent, referer, filename,))
+    thread.start()
+    return "OK"
+
+
+def threaded_req(url, user_agent, referer, filename):
     sess = requests.Session()
-    r = sess.get(url, headers={"User-Agent": user_agent, "Referer": referer, "range": "Bytes=%s" % (range_)},
-                 stream=True)
-    return Response(stream_with_context(r.iter_content(chunk_size=5000)), content_type=session["content-type"])
+    print("STARTING DOWNLOAD")
+    r = sess.get(url, headers={"User-Agent": user_agent, "Referer": referer},
+                 stream=True, allow_redirects=True)
+    with open(filename, "wb") as f:
+        for chunk in r.iter_content(chunk_size=4096):
+            if chunk:
+                f.write(chunk)
+    print("Downloaded File")
+
+
+@app.route("/session/_/progress-poll/")
+def progresses():
+    filename = session.get('filename')
+    filesize = session.get('filesize')
+    if filename is None or filesize is None:
+        return json.dumps({"error": "no"})
+    filesize = int(filesize)
+    try:
+        curr_size = os.path.getsize(filename)
+    except:
+        return json.dumps({"error": "no"})
+    if curr_size >= filesize:
+        session.pop('filename')
+        session.pop('filesize')
+        return json.dumps({"file": True, "link": '/get-cached/*/?mt='+quote(quote(str(session.get('content-type')))) + '&f='+quote(filename)})
+    else:
+        return json.dumps({"done": curr_size,
+                           "total": filesize})
+
+
+@app.route("/get-cached/*/", strict_slashes=False)
+def send_downloaded_file():
+    filename = request.args.get('f')
+    print(request.headers)
+    if not os.path.isfile(filename):
+        return "No File"
+    resp = make_response(send_from_directory(app.root_path, filename))
+    resp.headers["Content-Type"] = session.get(
+        'content-type') or unquote(request.args.get("mt"))
+    return resp
 
 
 def get_funcname(url):
@@ -175,4 +224,4 @@ def search_json():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')

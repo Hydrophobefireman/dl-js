@@ -6,9 +6,9 @@
     <title>Downloading.</title>
     <style>
         .ipg {
-            -moz-border-radius: 3px;
-            -webkit-border-radius: 3px;
-            border-radius: 3px;
+            -moz-border-radius: 15px;
+            -webkit-border-radius: 15px;
+            border-radius: 15px;
             padding: 8px;
             border: none;
             outline: none;
@@ -36,12 +36,6 @@
             background: white;
             text-transform: uppercase;
             cursor: pointer;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
             transition: 0.5s;
         }
         
@@ -62,240 +56,69 @@
     <div class=cst>
         <div id=main>
             <div>
-                <center>
-                    <span style="margin-top: 10px;">Download in Progress..</span>
-                    <div style="margin-top: 20px;">Creating a Blob Object for you to download the file </div>
-                    <button id=progrs style="display:none;max-width:100%;width:0px;margin-bottom:20px;" class=ipg></button>
-                    <button id=progrsb style="display:none;max-width:100%;width:0px;margin-bottom:20px;" class=ipg></button>
-                    <button id=progrsc style="display:none;max-width:100%;width:0px;margin-bottom:20px;" class=ipg></button>
-                    <div id=div_></div>
-                    <div id=div_b></div>
-                    <div id=div_c></div>
-                    <div>
-                        <a id="dl_a" download="download">
-                            <button style="display: none;" id=download_link class=ipgs>Click To Download </button>
-                        </a>
+                <div>Name Your File</div>
+                <input class=ipgs id=filename style='width:30%' value='file'>
+                <button class=ipg id=name-set>Change Name</button>
+                <div class=ajax-poll-section>
+                    <div class=dets>
+                        <div id='alldeets'><span id=till-done></span> % complete</div>
+                        <div id=total-size>Total Size:<span id=total-size-int></span>MB</div>
                     </div>
-                    <button style="display: none;" id=open_live class=ipgs>Click To try Open the video in the browser </button>
-                    <video id="hs_i" style="display: none;max-height:100%;max-width:100%;"></video>
-                </center>
+                </div>
+                <button class=ipg id=progressbtn style="width: 0px;display: none;"></button>
             </div>
+            <a href=# id=download-link download='file'>
+                <button class=ipgs id=dl-button style="display: none;">Click Here to Download</button>
+            </a>
         </div>
     </div>
-    <div id=filesetter>
-        <span id=helptext>Click here to Name your file</span>
-        <div>
-            <input id="valuef" value="download" class=ipgs maxlength="1000" style="text-transform:none;max-width:30%;cursor:text;">
-            <button id=namesh_3 class=ipgs style="width:auto;">Change Name</button>
-            <script>
-                filenames = document.getElementById("valuef").value;
-                var namests = document.getElementById("namesh_3");
-                namests.addEventListener("click", function() {
-                    filenames = document.getElementById("valuef").value;
-                    var elem = window.document.getElementById('dl_a');
-                    elem.download = filenames;
-                    namests.innerText = "filename Changed"
-                });
-                var invs = document.getElementById("valuef");
-                invs.addEventListener("click", function() {
-                    namests.innerText = "Change Name";
-                })
-            </script>
-        </div>
     </div>
     <script>
-        var BlobTheBuilder = function() {
-            this.parts = [];
+        document.getElementById("name-set").onclick = function() {
+            this.innerHTML = 'Name Changed';
+            document.getElementById("download-link").download = document.getElementById("filename").value;
         }
-
-        BlobTheBuilder.prototype.append = function(part) {
-            this.parts.push(part);
-            this.blob = undefined;
-        };
-
-        BlobTheBuilder.prototype.getBlob = function() {
-            if (!this.blob) {
-                this.blob = new Blob(this.parts, {
-                    type: "application/octet-stream"
-                });
-            }
-            return this.blob;
-        };
-
-        var BlobTheBuilder = new BlobTheBuilder();
-
-        function decodehtml(html) {
-            var txt = document.createElement("textarea");
-            txt.innerHTML = html;
-            return txt.value;
+        document.getElementById("filename").onclick = function() {
+            document.getElementById("name-set").innerHTML = 'change Name'
         }
-
-        function saver(filename, data) {
-            var blob = new Blob([data], {
-                type: '{{mimetype_|safe}}'
-            });
-            var elem = window.document.getElementById('dl_a');
-            elem.href = window.URL.createObjectURL(blob);
-            elem.download = filename;
-            document.body.appendChild(elem);
-            document.getElementById("download_link").style.display = "block";
-            var open_live = document.getElementById("open_live");
-            if ('{{mimetype_|safe}}'.indexOf("video") > -1) {
-                open_live.style.display = "block";
-                open_live.onclick = function() {
-                    var vid = document.getElementById("hs_i");
-                    vid.controls = "true";
-                    vid.src = elem.href;
-                    vid.style.display = "block";
-                }
-            }
-            elem.onclick = function() {
-                window.URL.revokeObjectURL(blob);
-                document.body.removeChild(elem);
-            }
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/proxy/f/?u=" + encodeURIComponent("{{url|safe}}") + "&referer=" + encodeURIComponent("{{ref|safe}}"));
+        xhr.send();
+        xhr.onload = function() {
+            setTimeout(check_download, 1000)
         }
+        var next_req = true
 
-        function range_builder(size) {
-            base = (Math.round(size / 3))
-            xhrRangeA = "0-" + base;
-            xhrRangeB = base + 1 + "-" + (2 * base)
-            xhrRangeC = (2 * base) + 1 + '-' + (size - 1);
-            return [xhrRangeA, xhrRangeB, xhrRangeC]
-        }
-        var filesize = parseInt("{{filesize|safe}}");
-        var accept_ranges = eval('{{accept_ranges}}');
-        var url_s = "/proxy/f/?u=" + encodeURIComponent(decodehtml("{{r}}"));
-        if (accept_ranges) {
-            ranges = range_builder(filesize);
-            xhrRangeA = ranges[0];
-            xhrRangeB = ranges[1];
-            xhrRangeC = ranges[2];
-            var data_dict = {}
-
-            function doAjaxRequest(method, url, range, progrs, div, dict_num) {
-                return new Promise(function(resolve, reject) {
-                    var xhr = new XMLHttpRequest();
-                    xhr.open(method, url + "&range=" + range + "&referer=" + encodeURIComponent("{{ref|safe}}"), true);
-                    xhr.responseType = 'blob';
-                    xhr.onload = function() {
-                        if (xhr.status === 200) {
-                            var b_lob = xhr.response;
-                            data_dict[dict_num] = b_lob;
-                            resolve("Done");
-                        } else {
-                            reject("Failed");
-                        }
-                    };
-                    xhr.send();
-                    xhr.onprogress = function(event) {
-                        document.getElementById(progrs).style.display = "block";
-                        if (!Math.round(filesize / 3) == 0) {
-                            document.getElementById(div).innerHTML = (event.loaded / (1024 * 1024)).toFixed(2) + " MB of " + (
-                                Math.round(filesize / 3) / (1024 * 1024)).toFixed(2) + " MB";
-                            document.getElementById(progrs).style.width = ((event.loaded / (1024 * 1024)) / (Math.round(filesize / 3) /
-                                (1024 * 1024))) * 100 + "%";
-                        } else {
-                            document.getElementById(progrs).style.width = "100%";
-                            document.getElementById(progrs).innerHTML = "Unknown File Size";
-                        }
-                    }
-                });
-            }
-            Promise.all([doAjaxRequest("GET", url_s, xhrRangeA, 'progrs', 'div_', 1),
-                    doAjaxRequest("GET", url_s, xhrRangeB, 'progrsb', 'div_b', 2),
-                    doAjaxRequest("GET", url_s, xhrRangeC, 'progrsc', 'div_c', 3)
-                ])
-                .then(function() {
-                    console.log("Completed");
-                    console.log(data_dict);
-                    BlobTheBuilder.append(data_dict[1]);
-                    BlobTheBuilder.append(data_dict[2]);
-                    BlobTheBuilder.append(data_dict[3]);
-                    bb = BlobTheBuilder.getBlob();
-                    saver(filenames, bb);
-                });
-        } else {
+        function check_download() {
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", url_s);
-            xhr.responseType = "blob";
+            xhr.open("GET", "/session/_/progress-poll/", true);
             xhr.onload = function() {
-                if (xhr.status === 200) {
-                    const b_lob = xhr.response;
-                    saver(document.getElementById("valuef").value, b_lob)
-                } else {
-                    console.log(xhr.statusText);
-                };
-                xhr.onerror = function() {
-                    console.error(xhr.statusText);
+                data = JSON.parse(xhr.response);
+                if (data.hasOwnProperty("error")) {
+                    next_req = false;
                 }
-            }
-            xhr.send();
-            xhr.onprogress = function(event) {
-                document.getElementById("progrs").style.display = "block";
-                if (!filesize == 0) /*filesize!=0 also works on NaN so instead of 0.0Mb out of NaN MB ..we will give out unknown file size*/ {
-                    document.getElementById("div_").innerHTML = (event.loaded / (1024 * 1024)).toFixed(2) + " MB of " + (
-                        filesize / (1024 * 1024)).toFixed(2) + " MB";
-                    document.getElementById("progrs").style.width = ((event.loaded / (1024 * 1024)) / (filesize / (1024 * 1024))) *
-                        100 + "%";
-                } else {
-                    document.getElementById("progrs").style.width = "100%";
-                    document.getElementById("progrs").innerHTML = "Unknown File Size";
-                }
-            }
-        }
-    </script>
-    <footer>
-        <div>
-            <button style="display: block;margin-top:20px;" id=helpb class=ipgs>Click Here For Help </button>
-            <div id="help_m" style="display:none;">
-                <div>
-                    <span>
-                        <strong>What are Blobs?</strong>
-                    </span>
-                </div>
-                <div>
-                    <span>Blob stands for Binary Large Object. A Blob url looks like this=>
-                 <div> <span id=example-blob-url></span></div> a Blob object stores the data in your browser from the server</span>
-                <div>
-                    <button class=ipg id=download>Click To Test Blob Support</button>
-                </div>
-                <br>
-                <script>
-                    window.URL = window.URL || window.webkitURL;
-                    blob = new Blob(['<html><head><body><div>Sample html doc</div></body></html>'], {
-                        type: 'application/octet-stream'
-                    });
-                    link = document.createElement("link");
-                    link.href = window.URL.createObjectURL(blob);
-                    document.getElementById("example-blob-url").innerText = link.href;
-                    document.getElementById("download").onclick = function() {
-                        var s = document.createElement("a");
-                        s.href = link.href;
-                        s.click()
-                    }
-                </script>
-                <div>Click the button, if download starts,your browser supports blob urls (download size is 1 byte)</div>
-                <hr>
-            </div>
-        </div>
-        </div>
-        <span class=warn>
-<strong>Important</strong> Some Browsers Do NOT Support Blob URLs. Most download managers will obviously do nothing with a blob url as the data is stored in the browser
-Android Users:Via Browser won't work with Blob URLs. You may want to use a different browser</span>
+                if (data.hasOwnProperty("file")) {
+                    document.getElementById("download-link").href = data.link;
+                    document.getElementById("dl-button").style.display = 'block';
+                    next_req = false;
 
-    </footer>
-    <script>
-        var btns_ = document.getElementById("helpb");
-        btns_.onclick = function() {
-            if (document.getElementById("help_m").style.display == "none") {
-                document.getElementById("help_m").style.display = "block";
-                btns_.innerText = "Click Here to Hide the menu";
-            } else {
-                document.getElementById("help_m").style.display = "none";
-                btns_.innerText = "Click here for Help";
+                } else {
+                    var done = parseInt(data.done);
+                    var total = parseInt(data.total);
+                    var perc = ((done / total) * 100).toFixed(2);
+                    document.getElementById('till-done').innerHTML = perc;
+                    document.getElementById("total-size-int").innerHTML = total / (1024 * 1024);
+                    document.getElementById("progressbtn").style.display = 'block';
+                    document.getElementById("progressbtn").style.width = perc + "%";
+                }
+            }
+            if (next_req) {
+                xhr.send();
+                setTimeout(check_download, 3000);
             }
         }
     </script>
+
 </body>
 
 </html>
