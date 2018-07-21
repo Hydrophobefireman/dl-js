@@ -3,7 +3,7 @@ import re
 import uuid
 import base64
 import os
-from urllib.parse import quote, unquote
+from urllib.parse import quote, unquote, urlparse
 import threading
 import requests
 from flask import (Flask, Response, make_response, redirect, render_template,
@@ -22,10 +22,14 @@ except ImportError:
     pass
 ua = "Mozilla/5.0 (Windows; U; Windows NT 10.0; en-US)\
  AppleWebKit/604.1.38 (KHTML, like Gecko) Chrome/68.0.3325.162"
+
 app.secret_key = "7bf9a280"
+
 basic_headers = {
+    "Accept-Encoding": "gzip, deflate",
     "User-Agent": ua,
     "Upgrade-Insecure-Requests": "1",
+    "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8",
     "dnt": '1',
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8"
 }
@@ -89,7 +93,7 @@ def check_for_redirects(url):
     u = sess.head(url, headers=basic_headers, allow_redirects=True)
     if re.search(r"https?://(www\.)?google\.co.*?\/url", u.url) is not None:
         url = re.search(r"URL='(?P<url>.*?)'",
-                        sess.get(u.url, allow_redirects=True).text, re.IGNORECASE)
+                        sess.get(u.url, allow_redirects=True, headers=basic_headers).text, re.IGNORECASE)
         return url.group("url")
     else:
         return u.url
@@ -118,7 +122,6 @@ def proxy_download():
 @app.route("/proxy/f/")
 def send_files():
     print(session['filesize'])
-    user_agent = request.headers.get("User-Agent") or ua
     url = unquote(request.args.get("u"))
     referer = request.args.get("referer")
     print("Downloading:'"+url[:50]+"...'")
@@ -126,15 +129,19 @@ def send_files():
         str(uuid.uuid4()).encode())[:10]
     filename = session['filename']
     thread = threading.Thread(
-        target=threaded_req, args=(url, user_agent, referer, filename,))
+        target=threaded_req, args=(url, referer, filename,))
     thread.start()
     return "OK"
 
 
-def threaded_req(url, user_agent, referer, filename):
+def threaded_req(url, referer, filename):
     sess = requests.Session()
+    parsed_url = urlparse(url)
     print("STARTING DOWNLOAD")
-    r = sess.get(url, headers={"User-Agent": user_agent, "Referer": referer},
+    dl_headers = {**basic_headers,
+                  "Referer": referer, "host": parsed_url.netloc}
+    print("headers:", dl_headers)
+    r = sess.get(url, headers=dl_headers,
                  stream=True, allow_redirects=True)
     with open(filename, "wb") as f:
         for chunk in r.iter_content(chunk_size=4096):
