@@ -2,6 +2,8 @@ import json
 import re
 import uuid
 import base64
+import shutil
+import time
 import os
 from urllib.parse import quote, unquote, urlparse
 import threading
@@ -131,6 +133,7 @@ def send_files():
     thread = threading.Thread(
         target=threaded_req, args=(url, referer, filename,))
     thread.start()
+    time.sleep(2)
     return "OK"
 
 
@@ -139,14 +142,11 @@ def threaded_req(url, referer, filename):
     parsed_url = urlparse(url)
     print("STARTING DOWNLOAD")
     dl_headers = {**basic_headers,
-                  "Referer": referer, "host": parsed_url.netloc}
+                  "host": parsed_url.netloc, "referer": referer}
     print("headers:", dl_headers)
-    r = sess.get(url, headers=dl_headers,
-                 stream=True, allow_redirects=True)
-    with open(filename, "wb") as f:
-        for chunk in r.iter_content(chunk_size=4096):
-            if chunk:
-                f.write(chunk)
+    with sess.get(url, headers=dl_headers, stream=True, allow_redirects=True) as r:
+        with open(filename, 'wb') as f:
+            shutil.copyfileobj(r.raw, f)
     print("Downloaded File")
 
 

@@ -38,6 +38,9 @@ function check_download() {
             document.getElementById("progressbtn").style.width = perc + "%";
         }
     }
+    xhr.onerror = function() {
+        next_req = false;
+    }
     if (next_req) {
         xhr.send();
         setTimeout(check_download, 3000);
