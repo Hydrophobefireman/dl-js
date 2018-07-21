@@ -25,7 +25,7 @@ function check_download() {
             document.getElementById("download-link").href = data.link;
             document.getElementById("dl-button").style.display = 'block';
             next_req = false;
-            document.getElementById("total-size-int").innerHTML = "100";
+            document.getElementById('till-done').innerHTML = "100";
             document.getElementById("progressbtn").style.width = "100%";
 
         } else {
