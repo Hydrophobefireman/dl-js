@@ -25,13 +25,15 @@ function check_download() {
             document.getElementById("download-link").href = data.link;
             document.getElementById("dl-button").style.display = 'block';
             next_req = false;
+            document.getElementById("total-size-int").innerHTML = "100";
+            document.getElementById("progressbtn").style.width = "100%";
 
         } else {
             var done = parseInt(data.done);
             var total = parseInt(data.total);
             var perc = ((done / total) * 100).toFixed(2);
             document.getElementById('till-done').innerHTML = perc;
-            document.getElementById("total-size-int").innerHTML = total / (1024 * 1024);
+            document.getElementById("total-size-int").innerHTML = (total / (1024 * 1024)).toFixed(2);
             document.getElementById("progressbtn").style.display = 'block';
             document.getElementById("progressbtn").style.width = perc + "%";
         }

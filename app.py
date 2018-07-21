@@ -1,6 +1,7 @@
 import json
 import re
-import time
+import uuid
+import base64
 import os
 from urllib.parse import quote, unquote
 import threading
@@ -121,7 +122,8 @@ def send_files():
     url = unquote(request.args.get("u"))
     referer = request.args.get("referer")
     print("Downloading:'"+url[:50]+"...'")
-    session['filename'] = str(time.time())
+    session['filename'] = base64.urlsafe_b64encode(
+        str(uuid.uuid4()).encode())[:10]
     filename = session['filename']
     thread = threading.Thread(
         target=threaded_req, args=(url, user_agent, referer, filename,))
@@ -164,19 +166,17 @@ def progresses():
 @app.route("/get-cached/*/", strict_slashes=False)
 def send_downloaded_file():
     filename = request.args.get('f')
-    print(request.headers)
+    print("******************\n", request.headers, "***********************")
     if not os.path.isfile(filename):
         return "No File"
-    fsize=os.path.getsize(filename)
+    fsize = os.path.getsize(filename)
     resp = make_response(send_from_directory(app.root_path, filename))
-    if "range" in request.headers:
-#Some download managers don't like an Accept Range:Byted header in ranged request
-        resp.headers.pop("Accept-Ranges")
-    if "Content-Range" not in resp.headers or str(resp.headers.get("Content-Range")).lower()=="bytes=0-":#Request headers are 0- or no header included
-        resp.headers["Content-Range"]="Bytes=0-%d/%d"%(fsize-1,fsize)
-    print(resp.headers)
+    # Request headers are 0- or no header included
+    if "Content-Range" not in resp.headers or str(resp.headers.get("Content-Range")).lower() == "bytes=0-":
+        resp.headers["Content-Range"] = "Bytes=0-%d/%d" % (fsize-1, fsize)
     resp.headers["Content-Type"] = session.get(
         'content-type') or request.args.get("mt") or "application/octet-stream"
+    print(resp.headers)
     return resp
 
 
