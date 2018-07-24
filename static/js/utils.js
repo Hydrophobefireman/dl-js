@@ -336,6 +336,9 @@ function create_video(data) {
     json_data = data;
     document.title = json_data.title;
     document.getElementById("title").innerHTML = json_data.title;
+    if (json_data.videos.length == 0) {
+        document.getElementById("errs").innerHTML = "No Playable Video Found..please Check if the video exists";
+    }
     for (var i = 0; i < json_data.video_urls.length; i++) {
         var h3 = document.createElement("div");
         h3.innerText = decodehtml(json_data.title);
@@ -353,9 +356,6 @@ function create_video(data) {
             offer_proxy();
         };
         v.poster = json_data.thumbnail;
-        if (json_data.hasOwnProperty("custom_posters")) {
-            v.poster = json_data.video_urls[i].poster;
-        }
         v.controls = 'True';
         v.height = '225';
         v.width = '400';
