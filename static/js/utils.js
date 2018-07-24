@@ -323,6 +323,8 @@ function create_video(data) {
         document.getElementById("btn-mp3url").href = "/mp3extract/?mp3u=" + encodeURIComponent(data.audio_url[0]['url']);
     }
     json_data = data;
+    document.title = json_data.title;
+    document.getElementById("title").innerHTML = json_data.title;
     for (var i = 0; i < json_data['video_urls'].length; i++) {
         var h3 = document.createElement("div");
         h3.innerText = decodehtml(json_data['title']);

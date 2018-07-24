@@ -4,6 +4,7 @@ import uuid
 import base64
 import shutil
 import time
+import subprocess
 import os
 from urllib.parse import quote, unquote, urlparse
 import threading
@@ -81,6 +82,65 @@ def get_video():
     return Response(json.dumps({"html": page, "funcname": func_name, "landing_url": url}), content_type='application/json')
 
 
+@app.route("/mp3extract/", strict_slashes=False)
+def extract_to_mp3():
+    print(request.headers)
+    _url = unquote(request.args.get("mp3u"))
+    mt = "audio/mp3"
+    return html_minify(render_template("mp3.html", u=_url, mime=quote(mt)))
+
+
+@app.route("/stream/f/cache/")
+def stream_cache():
+    ua = request.headers.get("User-Agent")
+    file_s = unquote(request.args.get("u"))
+    sess = requests.Session()
+
+    files_n = str(uuid.uuid4())
+    filename = "%s.mp4" % (files_n)
+    fsize = sess.head(file_s, headers={"User-Agent": ua},
+                      allow_redirects=True).headers.get("Content-Length")
+    r = sess.get(file_s, headers={"User-Agent": ua},
+                 allow_redirects=True, stream=True)
+    dl = str(uuid.uuid4())+".mp3"
+    print(file_s)
+    return Response(proxy_download_before_send(filename, r, dl, fsize, 0), content_type="text/event-stream")
+
+
+def proxy_download_before_send(fn, r, dl, fsize, completed):
+    fsize = int(fsize)
+    print(fn, fsize)
+    with open(fn, "ab") as f:
+        for e in r.iter_content(chunk_size=4096):
+            if e:
+                completed += 4096
+                yield "data: %d\n\n" % ((completed/fsize)*100)
+                f.write(e)
+    now_ = time.time()
+    print("DONE")
+    yield "data: ffmpeg-init\n\n"
+    g = """ffmpeg -i "%s" "%s" """ % (fn, dl)
+    to_ = "/send-cached/*/download/?url=%s" % (dl)
+    print(g)
+    p = subprocess.Popen([g], shell=True)
+    while p.poll() is None:
+        time.sleep(1)
+        yield "data: Converting since %d Seconds\n\n" % (int(time.time())-now_)
+    yield "data: "+to_ + "\n\n"
+
+
+@app.route("/send-cached/*/download/")
+def send_statics_no_range():
+    mp3file = request.args.get("url")
+    if os.path.isfile(mp3file):
+        rv = make_response(send_from_directory(app.root_path, mp3file))
+        rv.headers['Content-Disposition'] = "attachment;filename=%s" % (
+            mp3file)
+        return rv
+    else:
+        return "no"
+
+
 @app.route("/youtube/js/")
 def sig_func_name():
     url = request.args['url']
@@ -146,7 +206,9 @@ def threaded_req(url, referer, filename):
     print("headers:", dl_headers)
     with sess.get(url, headers=dl_headers, stream=True, allow_redirects=True) as r:
         with open(filename, 'wb') as f:
-            shutil.copyfileobj(r.raw, f)
+            for chunk in r.iter_content(chunk_size=1024*1024):
+                if chunk:
+                    f.write(chunk)
     print("Downloaded File")
 
 
@@ -164,7 +226,7 @@ def progresses():
     if curr_size >= filesize:
         session.pop('filename')
         session.pop('filesize')
-        return json.dumps({"file": True, "link": '/get-cached/*/?mt='+quote(quote(str(session.get('content-type')))) + '&f='+quote(filename)})
+        return json.dumps({"file": True, "link": '/get-cached/*/?mt='+str(session.get('content-type')) + '&f='+quote(filename)})
     else:
         return json.dumps({"done": curr_size,
                            "total": filesize})
