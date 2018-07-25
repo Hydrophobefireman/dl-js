@@ -214,7 +214,7 @@ function youtube(page, url) {
     }
     if (parseqs(urls[0]).s != null) {
         console.log("Fetch Signature Functions");
-        youtube_signatures(urls, data, data.base_js);
+        youtube_signatures(urls, data, data.basejs);
         return undefined;
     } else {
         for (var i = 0; i < urls.length; i++) {
