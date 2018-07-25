@@ -112,7 +112,7 @@ def get_video():
         })
     return Response(
         json.dumps({
-            "html": page,
+            "html": page.text,
             "funcname": func_name,
             "landing_url": url
         }),
