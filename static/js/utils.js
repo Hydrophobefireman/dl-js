@@ -336,7 +336,7 @@ function create_video(data) {
     json_data = data;
     document.title = json_data.title;
     document.getElementById("title").innerHTML = json_data.title;
-    if (json_data.videos.length == 0) {
+    if (json_data.video_urls.length == 0) {
         document.getElementById("errs").innerHTML = "No Playable Video Found..please Check if the video exists";
     }
     for (var i = 0; i < json_data.video_urls.length; i++) {
