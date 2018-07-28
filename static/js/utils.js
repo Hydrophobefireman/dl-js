@@ -56,6 +56,21 @@ function vidzi(page, base_url) {
     return data;
 }
 
+function megadrive(page, base_url) {
+    var data = {};
+    data.base_url = base_url;
+    page = parser.parseFromString(page, 'text/html');
+    data.title = og_search(page, 'title');
+    data.thumbnail = og_search(page, 'image');
+    reg = /mp4:["']([\s\S]*?)['"],/;
+    data.video_urls = [];
+    data.video_urls.push({
+        "url": reg.exec(page.body.innerHTML),
+        "quality": "Default"
+    });
+    return data;
+}
+
 function instagram(page, base_url) {
     var data = {};
     data.base_url = base_url;
