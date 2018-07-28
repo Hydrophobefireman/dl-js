@@ -97,6 +97,7 @@ def get_video():
             quote(url))
         return json.dumps({
             "url": url,
+            "funcname","null",
             "download": True,
             "site": re.search(reg, url).group(),
             "redirect": redirect,

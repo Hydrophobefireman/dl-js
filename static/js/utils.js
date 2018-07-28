@@ -3,7 +3,7 @@ var parser = new DOMParser();
 http://matthewfl.com/js/unPacker.js */
 function unpack(code) {
     var env = {
-        eval: function(c) {
+        eval: function (c) {
             code = c;
         },
         window: {},
@@ -235,7 +235,7 @@ function youtube_signatures(urls, data, url) {
     var xhr = new XMLHttpRequest();
     console.log(data);
     xhr.open('GET', "/youtube/js/?url=" + encodeURIComponent(url), true);
-    xhr.onload = function() {
+    xhr.onload = function () {
         if (xhr.status === 200) {
             ret = JSON.parse(xhr.response);
             var sig_js = document.createTextNode(ret.sig_js);
@@ -290,6 +290,7 @@ function get_videos(url) {
             if (res.hasOwnProperty("redirect")) {
                 document.getElementById("errs").innerHTML = "Redirecting to server extractor";
                 window.location = res.redirect;
+                return;
             }
             page = res.html;
             funcname = res.funcname;
@@ -352,7 +353,7 @@ function create_video(data) {
         var url = decodehtml(json_data.video_urls[i].url);
         source.src = url;
         source.type = 'video/mp4';
-        source.onerror = function() {
+        source.onerror = function () {
             offer_proxy();
         };
         v.poster = json_data.thumbnail;
@@ -369,7 +370,7 @@ function create_video(data) {
         proxy_.setAttribute("class", "proxy_403");
         proxy_.style.display = "none";
         proxy_.innerHTML = "View this video";
-        proxy_.onclick = function() {
+        proxy_.onclick = function () {
             window.location = "/fetch_url/?u=" + encodeURIComponent(url) + "&referer=" + encodeURIComponent(json_data.base_url);
         };
         a2.innerText = "Direct Link to Video File";
