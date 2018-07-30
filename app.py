@@ -1,13 +1,15 @@
-import json
-import re
-import uuid
 import base64
-import shutil
-import time
-import subprocess
+import json
 import os
-from urllib.parse import quote, unquote, urlparse
+import re
+import shutil
+import subprocess
 import threading
+import time
+import urllib.request
+import uuid
+from urllib.parse import quote, unquote, urlparse
+
 import requests
 from flask import (
     Flask,
@@ -242,16 +244,17 @@ def send_files():
 
 
 def threaded_req(url, referer, filename):
-    sess = requests.Session()
+    # sess = requests.Session()
     parsed_url = urlparse(url)
     print("STARTING DOWNLOAD")
     dl_headers = {**basic_headers, "host": parsed_url.netloc, "referer": referer}
     print("headers:", dl_headers)
-    with sess.get(url, headers=dl_headers, stream=True, allow_redirects=True) as r:
-        with open(filename, "wb") as f:
-            for chunk in r.iter_content(chunk_size=1024 * 1024):
-                if chunk:
-                    f.write(chunk)
+    opener = urllib.request.build_opener()
+    for k, v in dl_headers.items():
+        opener.addheaders = [(k, v)]
+    print(vars(opener))
+    urllib.request.install_opener(opener)
+    urllib.request.urlretrieve(url, filename)
     print("Downloaded File")
 
 

@@ -87,7 +87,6 @@ function instagram(page, base_url) {
             "url": video.getAttribute("content"),
             "quality": "default"
         });
-
     }
     return data;
 }

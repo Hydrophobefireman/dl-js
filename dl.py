@@ -1,9 +1,20 @@
 import re
+
 working_sites = [
-    'dailymotion', 'estream', 'googledrive',
-    'googlephotos', 'ggpht', 'googleplus',
-    'instagram', 'megadrive', 'rapidvideo',
-    'vidzi', 'vimeo', 'watcheng', 'yourupload', 'youtu'
+    "dailymotion",
+    "estream",
+    "googledrive",
+    "googlephotos",
+    "ggpht",
+    "googleplus",
+    "instagram",
+    "megadrive",
+    "rapidvideo",
+    "vidzi",
+    "vimeo",
+    "watcheng",
+    "yourupload",
+    "youtu",
 ]
 
 
@@ -12,9 +23,23 @@ def urlcheck(url):
     #   return True,True, googleplus.gplus TODO
     if re.search(r"^(https?:)?//.*\.?megadrive\.", url, re.IGNORECASE) is not None:
         return True, True
-    if re.search(r"^(https?:)?//.*\.?((docs|drive)\.google.com)|video\.google\.com", url, re.IGNORECASE) is not None:
+    if (
+        re.search(
+            r"^(https?:)?//.*\.?((docs|drive)\.google.com)|video\.google\.com",
+            url,
+            re.IGNORECASE,
+        )
+        is not None
+    ):
         return True, True
-    if re.search(r"^(https?:)?//.*\.?(photos\.google|photos\.app\.goo\.gl)", url, re.IGNORECASE) is not None:
+    if (
+        re.search(
+            r"^(https?:)?//.*\.?(photos\.google|photos\.app\.goo\.gl)",
+            url,
+            re.IGNORECASE,
+        )
+        is not None
+    ):
         return True, True
     if re.search(r"^(https?:)?//.*\.?estream", url, re.IGNORECASE) is not None:
         return True, True
