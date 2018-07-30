@@ -293,6 +293,7 @@ def send_downloaded_file():
         return "No File"
     fsize = os.path.getsize(filename)
     resp = make_response(send_from_directory(app.root_path, filename))
+    resp.headers["Accept-Ranges"]="Bytes"
     # Request headers are 0- or no header included
     if (
         "Content-Range" not in resp.headers
