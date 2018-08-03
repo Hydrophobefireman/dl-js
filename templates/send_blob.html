@@ -4,52 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="/static/favicon.ico">
     <title>Downloading.</title>
-    <style>
-        .ipg {
-            -moz-border-radius: 15px;
-            -webkit-border-radius: 15px;
-            border-radius: 15px;
-            padding: 8px;
-            border: none;
-            outline: none;
-            background: #3367d6;
-            color: white;
-            text-transform: uppercase;
-            cursor: pointer;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            transition: 0.5s;
-        }
-        
-        .ipgs {
-            -moz-border-radius: 20px;
-            -webkit-border-radius: 20px;
-            border-radius: 20px;
-            padding: 8px;
-            border: 1px solid #DFE1E5;
-            width: 100%;
-            outline: none;
-            background: white;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: 0.5s;
-        }
-        
-        .cst {
-            margin-right: auto;
-            margin-left: auto;
-            text-align: center;
-        }
-        
-        #div,
-        #download_link {
-            margin-top: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/styles/blob.min.css" />
 </head>
 
 <body>
@@ -61,8 +16,10 @@
                 <button class=ipg id=name-set>Change Name</button>
                 <div class=ajax-poll-section>
                     <div class=dets>
-                        <div id='alldeets'><span id=till-done></span> % complete</div>
-                        <div id=total-size>Total Size:<span id=total-size-int></span>MB</div>
+                        <div id='alldeets'>
+                            <span id=till-done></span> % complete</div>
+                        <div id=total-size>Total Size:
+                            <span id=total-size-int></span>MB</div>
                     </div>
                 </div>
                 <button class=ipg id=progressbtn style="width: 0px;display: none;"></button>
@@ -71,7 +28,6 @@
                 <button class=ipgs id=dl-button style="display: none;">Click Here to Download</button>
             </a>
         </div>
-    </div>
     </div>
     <script>
         window.dlurl = "{{url|safe}}";

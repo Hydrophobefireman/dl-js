@@ -5,100 +5,7 @@
     <meta name="referrer" content="never">
     <meta name="referrer" content="no-referrer">
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <style>
-        a {
-            color: black;
-        }
-        
-        #skelly {
-            transition: 1.5s;
-        }
-        
-        .skelly_btn {
-            -moz-border-radius: 100px;
-            -webkit-border-radius: 100px;
-            border-radius: 100px;
-            padding: 8px;
-            border: none;
-            width: 25%;
-            outline: none;
-            background: #e3e3e3;
-            color: white;
-            text-transform: uppercase;
-            cursor: inherit;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            transition: 1.5s;
-        }
-        
-        #skelly_div {
-            padding: 8px;
-            border: none;
-            outline: none;
-            background: #e3e3e3;
-            color: #000;
-            text-transform: uppercase;
-            cursor: inherit;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            transition: 1.5s;
-        }
-        
-        .rounded-image {
-            -moz-border-radius: 5px;
-            -webkit-border-radius: 5px;
-            border-radius: 5px;
-            height: 300px;
-            width: 400px;
-            max-width: 100%;
-        }
-        
-        .rc {
-            -moz-border-radius: 15px;
-            -webkit-border-radius: 15px;
-            border-radius: 15px;
-            padding: 4px;
-        }
-        
-        #s-button {
-            -moz-border-radius: 3px;
-            -webkit-border-radius: 3px;
-            border-radius: 3px;
-            padding: 8px;
-            border: none;
-            outline: none;
-            background: #3367d6;
-            color: white;
-            text-transform: uppercase;
-            cursor: pointer;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-        
-        .center_s {
-            margin-right: auto;
-            margin-left: auto;
-            text-align: center;
-        }
-        
-        input,
-        textarea,
-        button {
-            outline: none
-        }
-    </style>
+    <link rel="stylesheet" href="/static/styles/search.min.css">
     <title>{{q|safe}}</title>
 </head>
 
@@ -124,47 +31,6 @@
             </div>
         </div>
     </div>
-    </div>
-    <script>
-        function decodehtml(html) {
-            var txt = document.createElement("textarea");
-            txt.innerHTML = html;
-            return txt.value;
-        }
-        var doctitle = decodehtml(decodehtml("{{q}}"));
-        if (doctitle.length != 0) {
-            var titles = "Results for " + doctitle
-            document.title = titles;
-        } else {
-            document.title = "Results from youtube.com"
-        }
-
-        function search() {
-            var q = document.getElementById("search").value;
-            var url = "/search?q=" + q;
-            window.location = url;
-        }
-        document.getElementById("search").onkeyup = function(e) {
-            if (e.keyCode == 13) {
-                search()
-            }
-        }
-        var b = document.getElementById("s-button");
-        b.onmouseover = function() {
-            b.style.boxShadow = "3px 3px #d9dce0";
-        }
-        b.onmouseout = function() {
-            b.style.boxShadow = "0px 0px #d9dce0";
-
-        }
-        b.ontouchstart = function() {
-            b.style.boxShadow = "3px 3px #d9dce0";
-        }
-        b.ontouchend = function() {
-            b.style.boxShadow = "0px 0px #d9dce0";
-
-        }
-    </script>
     <script src='/static/js/youtube-search.js'></script>
     <script>
         get_data("{{q|safe}}")

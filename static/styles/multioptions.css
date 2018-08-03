@@ -1,0 +1,50 @@
+.ipg,
+.ipgs {
+    -moz-border-radius: 20px;
+    -webkit-border-radius: 20px;
+    border-radius: 20px;
+    padding: 8px;
+    border: 1px solid #DFE1E5;
+    width: 100%;
+    outline: none;
+    background: white;
+    text-transform: uppercase;
+    cursor: pointer;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    transition: 0.5s;
+}
+
+.ipgs {
+    height: inherit;
+    transition: 0.7s;
+}
+
+shows_s {
+    height: inherit;
+}
+
+a {
+    text-decoration: none
+}
+
+.cst {
+    margin-right: auto;
+    margin-left: auto;
+    text-align: center;
+}
+
+#siterows {
+    transition: 0.5s;
+    height: 0px;
+    display: none;
+}
+
+.result_holder {
+    transition: 0.6s;
+    height: inherit;
+}

@@ -252,7 +252,6 @@ def threaded_req(url, referer, filename):
     opener = urllib.request.build_opener()
     for k, v in dl_headers.items():
         opener.addheaders = [(k, v)]
-    print(vars(opener))
     urllib.request.install_opener(opener)
     urllib.request.urlretrieve(url, filename)
     print("Downloaded File")
@@ -293,7 +292,7 @@ def send_downloaded_file():
         return "No File"
     fsize = os.path.getsize(filename)
     resp = make_response(send_from_directory(app.root_path, filename))
-    resp.headers["Accept-Ranges"]="Bytes"
+    resp.headers["Accept-Ranges"] = "bytes"
     # Request headers are 0- or no header included
     if (
         "Content-Range" not in resp.headers

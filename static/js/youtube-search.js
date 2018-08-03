@@ -1,3 +1,41 @@
+function decodehtml(html) {
+    var txt = document.createElement("textarea");
+    txt.innerHTML = html;
+    return txt.value;
+}
+var doctitle = decodehtml(decodehtml(document.title));
+if (doctitle.length != 0) {
+    var titles = "Results for " + doctitle
+    document.title = titles;
+} else {
+    document.title = "Results from youtube.com"
+}
+
+function search() {
+    var q = document.getElementById("search").value;
+    var url = "/search?q=" + q;
+    window.location = url;
+}
+document.getElementById("search").onkeyup = function (e) {
+    if (e.keyCode == 13) {
+        search()
+    }
+}
+var b = document.getElementById("s-button");
+b.onmouseover = function () {
+    b.style.boxShadow = "3px 3px #d9dce0";
+}
+b.onmouseout = function () {
+    b.style.boxShadow = "0px 0px #d9dce0";
+
+}
+b.ontouchstart = function () {
+    b.style.boxShadow = "3px 3px #d9dce0";
+}
+b.ontouchend = function () {
+    b.style.boxShadow = "0px 0px #d9dce0";
+
+}
 var get_data, extract_data, gen_results;
 (function () {
     var _$0 = this;
