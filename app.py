@@ -125,8 +125,6 @@ def get_video():
                     {"html": page.text, "funcname": func_name, "landing_url": url}
                 )
             )
-    response.headers["Acces-Control-Allow-Origin"] = "https://pycode.tk"
-    response.headers["Access-Control-Allow-Headers"] = "*"
     response.headers["Content-Type"] = "application/json"
     return response
 
@@ -199,8 +197,6 @@ def sig_func_name():
     sig_js = funcs[0]
     funcname = funcs[1]
     res = make_response(json.dumps({"sig_js": sig_js, "funcname": funcname}))
-    res.headers["Access-Control-Allow-Origin"] = "https://pycode.tk"
-    res.headers["Access-Control-Allow-Headers"] = "*"
     res.headers["Content-Type"] = "application/json"
     return res
 
@@ -360,6 +356,23 @@ def get_funcname(url):
 @app.errorhandler(404)
 def page_error(e):
     return html_minify(render_template("404.html")), 404
+
+
+@app.after_request
+def cors___(res):
+    res.direct_passthrough = False
+    res.headers["Access-Control-Allow-Origin"] = "https://pycode.tk"
+    res.headers["Access-Control-Allow-Headers"] = "*"
+    vary = res.headers.get("Vary")
+    if vary:
+        if "accept-encoding" not in vary.lower():
+            res.headers[
+                "Vary"
+            ] = "{}, Access-Control-Allow-Origin,Access-Control-Allow-Headers".format(
+                vary
+            )
+    else:
+        res.headers["Vary"] = "Access-Control-Allow-Origin,Access-Control-Allow-Headers"
 
 
 @app.route("/api/gen_204/", strict_slashes=False)
