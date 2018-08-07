@@ -62,19 +62,6 @@ def enforce_https():
         return redirect(request.url.replace("http://", "https://"), code=301)
 
 
-@app.after_request
-def headers_stuff(response):
-    response.direct_passthrough = False
-    response.headers["Acces-Control-Allow-Origin"] = "https://pycode.tk"
-    vary = response.headers.get("Vary")
-    if vary:
-        if "accept-encoding" not in vary.lower():
-            response.headers["Vary"] = "{}, Origin".format(vary)
-    else:
-        response.headers["Vary"] = "Origin"
-    return response
-
-
 @app.route("/", strict_slashes=False)
 def index():
     return html_minify(render_template("index.html"))
@@ -120,16 +107,27 @@ def get_video():
         )
     func_name, url = get_funcname(url)
     if not func_name:
-        return json.dumps({"error": "not supported"})
-    page = requests.get(url, headers=basic_headers, allow_redirects=True)
-    if not page.ok:
-        return json.dumps(
-            {"error": "URL Returned The error-%s %s" % (page.status_code, page.reason)}
-        )
-    return Response(
-        json.dumps({"html": page.text, "funcname": func_name, "landing_url": url}),
-        content_type="application/json",
-    )
+        response = make_response(json.dumps({"error": "not supported"}))
+    else:
+        page = requests.get(url, headers=basic_headers, allow_redirects=True)
+        if not page.ok:
+            response = make_response(
+                json.dumps(
+                    {
+                        "error": "URL Returned The error-%s %s"
+                        % (page.status_code, page.reason)
+                    }
+                )
+            )
+        else:
+            response = make_response(
+                json.dumps(
+                    {"html": page.text, "funcname": func_name, "landing_url": url}
+                )
+            )
+    response.headers["Acces-Control-Allow-Origin"] = "https://pycode.tk"
+    response.headers["Content-Type"] = "application/json"
+    return response
 
 
 @app.route("/mp3extract/", strict_slashes=False)
@@ -199,10 +197,10 @@ def sig_func_name():
     funcs = yt_sig.main_decrypt().get_js(url)
     sig_js = funcs[0]
     funcname = funcs[1]
-    return Response(
-        json.dumps({"sig_js": sig_js, "funcname": funcname}),
-        content_type="application/json",
-    )
+    res = make_response(json.dumps({"sig_js": sig_js, "funcname": funcname}))
+    res.headers["Access-Control-Allow-Origin"] = "https://pycode.tk"
+    res.headers["Content-Type"] = "application/json"
+    return res
 
 
 def check_for_redirects(url):
