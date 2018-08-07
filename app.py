@@ -370,4 +370,5 @@ def search_json():
 
 
 if __name__ == "__main__":
+    open("/tmp/app-initialized", "w").close()
     app.run(debug=True, host="0.0.0.0")
