@@ -30,6 +30,7 @@ import yt_sig
 
 app = Flask(__name__)
 SAVE_DIR = os.path.join(app.root_path, "saves")
+print("SAVE_DIR:", SAVE_DIR)
 ua = "Mozilla/5.0 (Windows; U; Windows NT 10.0; en-US)\
  AppleWebKit/604.1.38 (KHTML, like Gecko) Chrome/68.0.3325.162"
 

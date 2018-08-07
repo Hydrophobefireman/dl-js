@@ -7,7 +7,6 @@ events {
 	accept_mutex on;
 	worker_connections 1024;
 }
-
 http {
         gzip on;
         gzip_comp_level 6;
@@ -32,6 +31,7 @@ http {
      
 
 	server {
+		root app;
 		listen <%= ENV["PORT"] %>;
 		server_name _;
 		keepalive_timeout 5;
