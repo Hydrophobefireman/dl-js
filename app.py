@@ -347,6 +347,13 @@ def page_error(e):
     return html_minify(render_template("404.html")), 404
 
 
+@app.route("/api/gen_204/", strict_slashes=False)
+def wakeup():
+    res = make_response()
+    res.headers["X-Ready"] = str(uuid.uuid4())
+    return res, 204
+
+
 @app.route("/search/", strict_slashes=False)
 def search():
     q = request.args.get("q")
