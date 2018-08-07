@@ -373,6 +373,7 @@ def cors___(res):
             )
     else:
         res.headers["Vary"] = "Access-Control-Allow-Origin,Access-Control-Allow-Headers"
+    return res
 
 
 @app.route("/api/gen_204/", strict_slashes=False)
