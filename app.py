@@ -62,6 +62,17 @@ def enforce_https():
         return redirect(request.url.replace("http://", "https://"), code=301)
 
 
+@app.after_request
+def headers_stuff(response):
+    response.headers["Acces-Control-Allow-Origin"] = "https://pycode.tk"
+    vary = response.headers.get("Vary")
+    if vary:
+        if "accept-encoding" not in vary.lower():
+            response.headers["Vary"] = "{}, Origin".format(vary)
+    else:
+        response.headers["Vary"] = "Origin"
+
+
 @app.route("/", strict_slashes=False)
 def index():
     return html_minify(render_template("index.html"))
