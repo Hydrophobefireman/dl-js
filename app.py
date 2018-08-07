@@ -245,7 +245,6 @@ def send_files():
 
 def threaded_req(url, referer, filename):
     # sess = requests.Session()
-    mime = str(mime).lower()
     parsed_url = urlparse(url)
     print("STARTING DOWNLOAD")
     dl_headers = {**basic_headers, "host": parsed_url.netloc, "referer": referer}
