@@ -29,8 +29,12 @@ import streamsites
 import yt_sig
 
 app = Flask(__name__)
-SAVE_DIR = os.path.join(app.root_path, "saves")
-print("SAVE_DIR:", SAVE_DIR)
+try:
+    from flask_compress import Compress
+
+    Compress(app)
+except ImportError:
+    pass
 ua = "Mozilla/5.0 (Windows; U; Windows NT 10.0; en-US)\
  AppleWebKit/604.1.38 (KHTML, like Gecko) Chrome/68.0.3325.162"
 
@@ -227,17 +231,12 @@ def proxy_download():
 
 @app.route("/proxy/f/")
 def send_files():
-    if not os.path.isdir(SAVE_DIR):
-        os.mkdir(SAVE_DIR)
     print(session["filesize"])
     url = unquote(request.args.get("u"))
     referer = request.args.get("referer")
     print("Downloading:'" + url[:50] + "...'")
-    session["filename"] = base64.urlsafe_b64encode(str(uuid.uuid4()).encode()).decode()[
-        :15
-    ] + guess_mime().mimes(str(session.get("content-type")))
+    session["filename"] = base64.urlsafe_b64encode(str(uuid.uuid4()).encode())[:10]
     filename = session["filename"]
-    print(filename)
     thread = threading.Thread(target=threaded_req, args=(url, referer, filename))
     thread.start()
     time.sleep(2)
@@ -254,7 +253,7 @@ def threaded_req(url, referer, filename):
     for k, v in dl_headers.items():
         opener.addheaders = [(k, v)]
     urllib.request.install_opener(opener)
-    urllib.request.urlretrieve(url, os.path.join(SAVE_DIR, filename))
+    urllib.request.urlretrieve(url, filename)
     print("Downloaded File")
 
 
@@ -266,25 +265,33 @@ def progresses():
         return json.dumps({"error": "no"})
     filesize = int(filesize)
     try:
-        curr_size = os.path.getsize(os.path.join(SAVE_DIR, filename))
+        curr_size = os.path.getsize(filename)
     except:
         return json.dumps({"error": "no"})
     if curr_size >= filesize:
         session.pop("filename")
         session.pop("filesize")
-        return json.dumps({"file": True, "link": "/saves/" + str(filename)})
+        return json.dumps(
+            {
+                "file": True,
+                "link": "/get-cached/*/?mt="
+                + str(session.get("content-type"))
+                + "&f="
+                + quote(filename),
+            }
+        )
     else:
         return json.dumps({"done": curr_size, "total": filesize})
 
 
-old = """@app.route("/get-cached/f/", strict_slashes=False)
+@app.route("/get-cached/*/", strict_slashes=False)
 def send_downloaded_file():
     filename = request.args.get("f")
     print("******************\n", request.headers, "***********************")
-    if not os.path.isfile(os.path.join(SAVE_DIR, filename)):
+    if not os.path.isfile(filename):
         return "No File"
-    fsize = os.path.getsize(os.path.join(SAVE_DIR, filename))
-    resp = make_response(send_from_directory(SAVE_DIR, filename))
+    fsize = os.path.getsize(filename)
+    resp = make_response(send_from_directory(app.root_path, filename))
     resp.headers["Accept-Ranges"] = "bytes"
     # Request headers are 0- or no header included
     if (
@@ -299,34 +306,6 @@ def send_downloaded_file():
     )
     print(resp.headers)
     return resp
-"""
-
-
-class guess_mime(object):
-    def mimes(self, _mime_type):
-        mime_type = _mime_type.split(";")[0]
-        if "/" not in mime_type:
-            return self.guess_from_type(mime_type)
-        elif "octet" in mime_type:
-            return ".bin"
-        elif "event-stream" in mime_type or "text/html" in mime_type:
-            return ".html"
-        elif "image" in mime_type:
-            if "x-icon" in mime_type:
-                return ".ico"
-            else:
-                return "image.%s" % (mime_type.split("/")[1])
-        elif "video" in mime_type:
-            return ".%s" % (mime_type.split("/")[1])
-        elif re.search(r"(text|javascript|json)", mime_type):
-            return ".txt"
-        elif "/zip" in mime_type:
-            return ".zip"
-        else:
-            return ".bin"
-
-    def guess_from_type(self, mt):
-        return ".%s" % (mt)
 
 
 def get_funcname(url):
@@ -391,5 +370,4 @@ def search_json():
 
 
 if __name__ == "__main__":
-    open("/tmp/app-initialized", "w").close()
     app.run(debug=True, host="0.0.0.0")

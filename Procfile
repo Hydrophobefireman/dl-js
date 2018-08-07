@@ -1,1 +1,1 @@
-web: bin/start-nginx exec gunicorn -c gunicorn.conf app:app
+web: gunicorn app:app -w 4 --threads 3 --timeout 500 
