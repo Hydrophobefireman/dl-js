@@ -236,17 +236,20 @@ def send_files():
         :15
     ]
     filename = session["filename"]
-    thread = threading.Thread(target=threaded_req, args=(url, referer, filename))
+    thread = threading.Thread(
+        target=threaded_req, args=(url, referer, filename, session.get("content-type"))
+    )
     thread.start()
     time.sleep(2)
     return "OK"
 
 
-def threaded_req(url, referer, filename):
+def threaded_req(url, referer, filename, mime):
     # sess = requests.Session()
+    mime = str(mime).lower()
     parsed_url = urlparse(url)
     print("STARTING DOWNLOAD")
-    filename = os
+    filename = filename + guess_mime().mimes(mime)
     dl_headers = {**basic_headers, "host": parsed_url.netloc, "referer": referer}
     print("headers:", dl_headers)
     opener = urllib.request.build_opener()
@@ -271,20 +274,12 @@ def progresses():
     if curr_size >= filesize:
         session.pop("filename")
         session.pop("filesize")
-        return json.dumps(
-            {
-                "file": True,
-                "link": "/get-cached/*/?mt="
-                + str(session.get("content-type"))
-                + "&f="
-                + quote(filename),
-            }
-        )
+        return json.dumps({"file": True, "link": "/saves/" + str(filename)})
     else:
         return json.dumps({"done": curr_size, "total": filesize})
 
 
-@app.route("/get-cached/f/", strict_slashes=False)
+old = """@app.route("/get-cached/f/", strict_slashes=False)
 def send_downloaded_file():
     filename = request.args.get("f")
     print("******************\n", request.headers, "***********************")
@@ -306,6 +301,34 @@ def send_downloaded_file():
     )
     print(resp.headers)
     return resp
+"""
+
+
+class guess_mime:
+    def mimes(self, _mime_type):
+        mime_type = _mime_type.split(";")[0]
+        if "/" not in mime_type:
+            return self.guess_from_type(mime_type)
+        elif "octet" in mime_type:
+            return ".bin"
+        elif "event-stream" in mime_type or "text/html" in mime_type:
+            return ".html"
+        elif "image" in mime_type:
+            if "x-icon" in mime_type:
+                return ".ico"
+            else:
+                return "image.%s" % (mime_type.split("/")[1])
+        elif "video" in mime_type:
+            return ".%s" % (mime_type.split("/")[1])
+        elif re.search(r"(text|javascript|json)", mime_type):
+            return ".txt"
+        elif "/zip" in mime_type:
+            return ".zip"
+        else:
+            return ".bin"
+
+    def guess_from_type(self, mt):
+        return ".%s" % (mt)
 
 
 def get_funcname(url):
