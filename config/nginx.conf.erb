@@ -43,8 +43,6 @@ http {
 			proxy_pass http://app_server;
 		}
 		location /saves/ {
-			# checks for static file, if not found proxy to app
-			try_files $uri @proxy_to_app;
 		  }
 	}
 }
