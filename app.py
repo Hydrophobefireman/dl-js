@@ -61,6 +61,7 @@ def enforce_https():
     ):
         return redirect(request.url.replace("http://", "https://"), code=301)
 
+
 @app.after_request
 def headers_stuff(response):
     response.direct_passthrough = False
