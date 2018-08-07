@@ -234,22 +234,20 @@ def send_files():
     print("Downloading:'" + url[:50] + "...'")
     session["filename"] = base64.urlsafe_b64encode(str(uuid.uuid4()).encode()).decode()[
         :15
-    ]
+    ] + guess_mime().mimes(str(session.get("content-type")))
     filename = session["filename"]
-    thread = threading.Thread(
-        target=threaded_req, args=(url, referer, filename, session.get("content-type"))
-    )
+    print(filename)
+    thread = threading.Thread(target=threaded_req, args=(url, referer, filename))
     thread.start()
     time.sleep(2)
     return "OK"
 
 
-def threaded_req(url, referer, filename, mime):
+def threaded_req(url, referer, filename):
     # sess = requests.Session()
     mime = str(mime).lower()
     parsed_url = urlparse(url)
     print("STARTING DOWNLOAD")
-    filename = filename + guess_mime().mimes(mime)
     dl_headers = {**basic_headers, "host": parsed_url.netloc, "referer": referer}
     print("headers:", dl_headers)
     opener = urllib.request.build_opener()
@@ -304,7 +302,7 @@ def send_downloaded_file():
 """
 
 
-class guess_mime:
+class guess_mime(object):
     def mimes(self, _mime_type):
         mime_type = _mime_type.split(";")[0]
         if "/" not in mime_type:
