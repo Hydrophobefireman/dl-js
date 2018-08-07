@@ -29,12 +29,7 @@ import streamsites
 import yt_sig
 
 app = Flask(__name__)
-try:
-    from flask_compress import Compress
-
-    Compress(app)
-except ImportError:
-    pass
+SAVE_DIR = os.path.join(app.root_path, "saves")
 ua = "Mozilla/5.0 (Windows; U; Windows NT 10.0; en-US)\
  AppleWebKit/604.1.38 (KHTML, like Gecko) Chrome/68.0.3325.162"
 
@@ -231,11 +226,15 @@ def proxy_download():
 
 @app.route("/proxy/f/")
 def send_files():
+    if not os.path.isdir(SAVE_DIR):
+        os.mkdir(SAVE_DIR)
     print(session["filesize"])
     url = unquote(request.args.get("u"))
     referer = request.args.get("referer")
     print("Downloading:'" + url[:50] + "...'")
-    session["filename"] = base64.urlsafe_b64encode(str(uuid.uuid4()).encode())[:10]
+    session["filename"] = base64.urlsafe_b64encode(str(uuid.uuid4()).encode()).decode()[
+        :15
+    ]
     filename = session["filename"]
     thread = threading.Thread(target=threaded_req, args=(url, referer, filename))
     thread.start()
@@ -247,13 +246,14 @@ def threaded_req(url, referer, filename):
     # sess = requests.Session()
     parsed_url = urlparse(url)
     print("STARTING DOWNLOAD")
+    filename = os
     dl_headers = {**basic_headers, "host": parsed_url.netloc, "referer": referer}
     print("headers:", dl_headers)
     opener = urllib.request.build_opener()
     for k, v in dl_headers.items():
         opener.addheaders = [(k, v)]
     urllib.request.install_opener(opener)
-    urllib.request.urlretrieve(url, filename)
+    urllib.request.urlretrieve(url, os.path.join(SAVE_DIR, filename))
     print("Downloaded File")
 
 
@@ -265,7 +265,7 @@ def progresses():
         return json.dumps({"error": "no"})
     filesize = int(filesize)
     try:
-        curr_size = os.path.getsize(filename)
+        curr_size = os.path.getsize(os.path.join(SAVE_DIR, filename))
     except:
         return json.dumps({"error": "no"})
     if curr_size >= filesize:
@@ -284,14 +284,14 @@ def progresses():
         return json.dumps({"done": curr_size, "total": filesize})
 
 
-@app.route("/get-cached/*/", strict_slashes=False)
+@app.route("/get-cached/f/", strict_slashes=False)
 def send_downloaded_file():
     filename = request.args.get("f")
     print("******************\n", request.headers, "***********************")
-    if not os.path.isfile(filename):
+    if not os.path.isfile(os.path.join(SAVE_DIR, filename)):
         return "No File"
-    fsize = os.path.getsize(filename)
-    resp = make_response(send_from_directory(app.root_path, filename))
+    fsize = os.path.getsize(os.path.join(SAVE_DIR, filename))
+    resp = make_response(send_from_directory(SAVE_DIR, filename))
     resp.headers["Accept-Ranges"] = "bytes"
     # Request headers are 0- or no header included
     if (
