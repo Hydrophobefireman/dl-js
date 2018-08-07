@@ -235,7 +235,9 @@ def send_files():
     url = unquote(request.args.get("u"))
     referer = request.args.get("referer")
     print("Downloading:'" + url[:50] + "...'")
-    session["filename"] = base64.urlsafe_b64encode(str(uuid.uuid4()).encode())[:10]
+    session["filename"] = base64.urlsafe_b64encode(str(uuid.uuid4()).encode()).decode()[
+        :15
+    ]
     filename = session["filename"]
     thread = threading.Thread(target=threaded_req, args=(url, referer, filename))
     thread.start()
