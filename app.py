@@ -71,6 +71,7 @@ def headers_stuff(response):
             response.headers["Vary"] = "{}, Origin".format(vary)
     else:
         response.headers["Vary"] = "Origin"
+    return response
 
 
 @app.route("/", strict_slashes=False)
