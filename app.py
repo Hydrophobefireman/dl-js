@@ -126,6 +126,7 @@ def get_video():
                 )
             )
     response.headers["Acces-Control-Allow-Origin"] = "https://pycode.tk"
+    response.headers["Access-Control-Allow-Headers"] = "*"
     response.headers["Content-Type"] = "application/json"
     return response
 
@@ -199,6 +200,7 @@ def sig_func_name():
     funcname = funcs[1]
     res = make_response(json.dumps({"sig_js": sig_js, "funcname": funcname}))
     res.headers["Access-Control-Allow-Origin"] = "https://pycode.tk"
+    res.headers["Access-Control-Allow-Headers"] = "*"
     res.headers["Content-Type"] = "application/json"
     return res
 
@@ -366,6 +368,7 @@ def wakeup():
     res.headers["X-Ready"] = str(uuid.uuid4())
     res.headers["Access-Control-Expose-Headers"] = "X-Ready"
     res.headers["Access-Control-Allow-Origin"] = "*"
+    res.headers["Access-Control-Allow-Headers"] = "*"
     return res, 204
 
 
