@@ -351,7 +351,7 @@ def page_error(e):
 def wakeup():
     res = make_response()
     res.headers["X-Ready"] = str(uuid.uuid4())
-    res.headers["Access-Control-Allow-Headers"] = "X-Ready"
+    res.headers["Access-Control-Expose-Headers"] = "X-Ready"
     res.headers["Access-Control-Allow-Origin"] = "*"
     return res, 204
 
