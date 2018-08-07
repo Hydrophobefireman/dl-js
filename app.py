@@ -86,6 +86,8 @@ def video():
 def get_video():
     try:
         url = request.form["url"]
+        if not url.startswith("http"):
+            url = "http://" + url
         url = check_for_redirects(url)
     except:
         return json.dumps({"error": "not supported"})
