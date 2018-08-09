@@ -23,6 +23,7 @@ function og_search(page, what) {
     return resp;
 }
 
+
 function decodehtml(html) {
     var txt = document.createElement("textarea");
     txt.innerHTML = html;
@@ -71,6 +72,79 @@ function megadrive(page, base_url) {
     return data;
 }
 
+function openload(_page, base_url) {
+    console.log('Openload')
+    var sandbox = {
+        window: {
+            location: function (e) {
+                return
+            }
+        },
+        location: function (e) {
+            return
+        }
+
+    }
+    page = parser.parseFromString(_page, 'text/html');
+    var div = document.createElement('div');
+    div.id = 'OpenloadID';
+    div.style.display = 'none';
+    div.innerHTML = page.body.innerHTML;
+    with(sandbox) {
+        document.body.appendChild(div);
+        document.body.style.backgroundColor = '#fff';
+        var p = document.getElementById('DtsBlkVFQx') || [...document.querySelectorAll("p")]
+            .filter(a => a.textContent.includes("640K"))[0] || document.getElementsByTagName("p")[1]
+        //document.body.style.visibility = 'hidden';
+        var scripts = page.scripts;
+        eval(scripts[scripts.length - 1].innerHTML)
+    }
+    var url = p;
+    var final_reg = new RegExp(/>[\s\S]([\w-]+~\d{10,}~\d+\.\d+\.0\.0~[\w-]+)[\s\S]</);
+    var bruh = document.getElementById('openload-why');
+    bruh.style.display = 'block';
+    bruh.onclick = function () {
+        data = {};
+        data.base_url = base_url;
+        if (url) {
+            data.video_urls = [{
+                "url": "https://openload.co/stream/" + url.innerHTML + '?mime=true',
+                "quality": "Default"
+            }];
+        } else {
+            console.warn("Using Regex..")
+            url = final_reg.exec(div.innerHTML).replace("<", '').replace(">", '');
+            data.video_urls = [{
+                "url": "https://openload.co/stream/" + url + '?mime=true',
+                "quality": "Default"
+            }];
+        }
+        data.title = 'Video';
+        data.thumbnail = document.getElementsByTagName('video').poster;
+        document.body.removeChild(div);
+        console.log(data)
+        start_create_video(data);
+    }
+    return undefined
+
+
+}
+
+function get_data() {
+    try {
+        document.body.click();
+        document.getElementsByTagName("div")[0].click();
+        console.log(document.getElementById('DtsBlkVFQx').innerHTML)
+        return document.getElementById('DtsBlkVFQx').innerHTML
+    } catch (e) {
+        console.log(e)
+        setTimeout(60, function () {
+            get_data()
+        })
+    }
+}
+
+
 function instagram(page, base_url) {
     var data = {};
     data.base_url = base_url;
@@ -92,7 +166,7 @@ function instagram(page, base_url) {
 }
 
 function streamango(page, base_url) {
-    var re = new RegExp(/eval\(function\(p[\s\S]*?var\s*?srces=[\s\S]*?}\);/);
+    var re = new RegExp(/eval\(function\(p[\s\S]*?var[\s\S]*?srces=[\s\S]*?}\);/);
     var data = {};
     data.video_urls = [];
     page = parser.parseFromString(page, 'text/html');
@@ -312,6 +386,7 @@ function get_videos(url) {
             try {
                 data = window[funcname](page, url);
             } catch (e) {
+                console.error(e);
                 document.getElementById("errs").innerHTML = "An Unknown Error Occured";
                 throw (e);
             }

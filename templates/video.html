@@ -5,6 +5,7 @@
     <link rel='shortcut icon' href="/static/favicon.ico" />
     <title>Video</title>
     <link rel="stylesheet" href="/static/styles/video.min.css">
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
 </head>
 
 <body>
@@ -31,10 +32,11 @@
                 </a>
                 <div id=videos>
                 </div>
+                <div id="openload-why" style="display:none;margin: auto;text-align: center;display: inline-flex;">Click Here To Begin Extraction</div>
             </div>
         </div>
     </div>
-    <script src='/static/js/utils.min.js'></script>
+    <script src='/static/js/utils.js'></script>
     <script>
         get_videos("{{url|safe}}")
     </script>

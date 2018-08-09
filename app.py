@@ -91,7 +91,7 @@ def get_video():
         url = check_for_redirects(url)
     except:
         return json.dumps({"error": "not supported"})
-    reg = r"^https?://(.{3})?\.?(oload|openload|daclips|thevideo|vev.io)"
+    reg = r"^https?://(.{3})?\.?(daclips|thevideo|vev.io)"
     if re.search(reg, url) is not None:
         redirect = "https://proxy-py.herokuapp.com/api/parse_query?url=%s" % (
             quote(url)
@@ -322,6 +322,13 @@ def send_downloaded_file():
 
 
 def get_funcname(url):
+    if (
+        re.search(
+            r"^(https?:)?//.*\.?(openload|oload|openupload)\.", url, re.IGNORECASE
+        )
+        is not None
+    ):
+        return "openload", url
     if re.search(r"^(https?:)?//.*\.?megadrive\.", url, re.IGNORECASE) is not None:
         return "megadrive", url
     if re.search(r"^(https?:)?//.*\.?estream", url, re.IGNORECASE) is not None:
