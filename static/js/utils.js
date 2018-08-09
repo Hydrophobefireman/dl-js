@@ -166,7 +166,7 @@ function instagram(page, base_url) {
 }
 
 function streamango(page, base_url) {
-    var re = new RegExp(/eval\(function\(p[\s\S]*?var[\s\S]*?srces=[\s\S]*?}\);/);
+    var re = new RegExp(/eval\(function\(p[\s\S]*?var\s*?srces=[\s\S]*?}\);/);
     var data = {};
     data.video_urls = [];
     page = parser.parseFromString(page, 'text/html');
