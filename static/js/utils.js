@@ -102,7 +102,6 @@ function openload(_page, base_url) {
     var url = p;
     var final_reg = new RegExp(/>[\s\S]([\w-]+~\d{10,}~\d+\.\d+\.0\.0~[\w-]+)[\s\S]</);
     var bruh = document.getElementById('openload-why');
-    bruh.style.display = 'block';
     bruh.onclick = function () {
         data = {};
         data.base_url = base_url;
@@ -118,10 +117,11 @@ function openload(_page, base_url) {
                 "url": "https://openload.co/stream/" + url + '?mime=true',
                 "quality": "Default"
             }];
+            document.body.removeChild(div);
         }
         data.title = 'Video';
+        bruh.style.display = 'block';
         data.thumbnail = document.getElementsByTagName('video').poster;
-        document.body.removeChild(div);
         console.log(data)
         start_create_video(data);
     }
