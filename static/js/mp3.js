@@ -1,6 +1,6 @@
 var namests = document.getElementById("namesh_3");
 namests.addEventListener("click", function () {
-    var filenames = document.getElementById("value-f").value;
+    filenames = document.getElementById("value-f").value;
     namests.innerText = "filename Changed";
     document.getElementById("dl_links").download = filenames;
 });
@@ -9,7 +9,7 @@ invs.addEventListener("click", function () {
     namests.innerText = "Change Name";
 
 })
-var prbr = document.getElementById("dds_pgbr");
+prbr = document.getElementById("dds_pgbr");
 var el = document.getElementById("div_");
 document.body.appendChild(el);
 const evtSource = new EventSource("/stream/f/cache?u=" + encodeURIComponent(window.dlurl));

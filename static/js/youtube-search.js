@@ -1,19 +1,17 @@
-const decodehtml = (html) => {
-        var txt = document.createElement("textarea");
-        txt.innerHTML = html;
-        return txt.value;
-    }
-    (async () => {
-        var doctitle = decodehtml(document.title);
-        if (doctitle.length != 0) {
-            var titles = "Results for " + doctitle
-            document.title = titles;
-        } else {
-            document.title = "Results from youtube.com"
-        }
-    })();
+function decodehtml(html) {
+    var txt = document.createElement("textarea");
+    txt.innerHTML = html;
+    return txt.value;
+}
+var doctitle = decodehtml(decodehtml(document.title));
+if (doctitle.length != 0) {
+    var titles = "Results for " + doctitle
+    document.title = titles;
+} else {
+    document.title = "Results from youtube.com"
+}
 
-const search = () => {
+function search() {
     var q = document.getElementById("search").value;
     var url = "/search?q=" + q;
     window.location = url;
@@ -24,17 +22,17 @@ document.getElementById("search").onkeyup = function (e) {
     }
 }
 var b = document.getElementById("s-button");
-b.onmouseover = () => {
+b.onmouseover = function () {
     b.style.boxShadow = "3px 3px #d9dce0";
 }
-b.onmouseout = () => {
+b.onmouseout = function () {
     b.style.boxShadow = "0px 0px #d9dce0";
 
 }
-b.ontouchstart = () => {
+b.ontouchstart = function () {
     b.style.boxShadow = "3px 3px #d9dce0";
 }
-b.ontouchend = () => {
+b.ontouchend = function () {
     b.style.boxShadow = "0px 0px #d9dce0";
 
 }
@@ -42,7 +40,7 @@ var get_data, extract_data, gen_results;
 (function () {
     var _$0 = this;
 
-    var _3 = (q) => {
+    var _3 = function (q) {
         var req = new Request("/search/fetch/", {
             method: 'post',
             headers: {
@@ -62,7 +60,7 @@ var get_data, extract_data, gen_results;
         });
     };
 
-    var _4 = (data) => {
+    var _4 = function (data) {
         html = data['html'];
         trending = data['trending'];
         console.log(trending);
@@ -123,7 +121,7 @@ var get_data, extract_data, gen_results;
         gen_results(json_data);
     };
 
-    var _5 = (json_data) => {
+    var _5 = function (json_data) {
         document.getElementById("skelly").style.display = "none";
         document.getElementById("content").style.display = "block";
 
@@ -149,20 +147,21 @@ var get_data, extract_data, gen_results;
             var ch_url = document.createElement("a");
             ch_url.href = channel_url;
             ch_url.innerHTML = channel;
-            img.onmouseover = self => {
-                self.target.src = self.target.getAttribute("data-motion");
+
+            img.onmouseover = function () {
+                this.src = this.getAttribute("data-motion");
             };
 
-            img.onmouseout = self => {
-                self.target.src = self.target.getAttribute("data-img");
+            img.onmouseout = function () {
+                this.src = this.getAttribute("data-img");
             };
 
-            img.ontouchstart = self => {
-                self.target.src = self.target.getAttribute("data-motion");
+            img.ontouchstart = function () {
+                this.src = this.getAttribute("data-motion");
             };
 
-            img.ontouchend = self => {
-                self.target.src = self.target.getAttribute("data-img");
+            img.ontouchend = function () {
+                this.src = this.getAttribute("data-img");
             };
 
             var sp = document.createElement("div");

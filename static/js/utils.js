@@ -1,16 +1,16 @@
 var parser = new DOMParser();
 /*modified 
 http://matthewfl.com/js/unPacker.js */
-const unpack = (code) => {
+function unpack(code) {
     var env = {
         eval: function (c) {
             code = c;
         },
         window: {},
-        document: {}
+        document: {} 
     };
     eval("with(env) {" + code + "}");
-    code = (code + "");
+    code = (code + "").replace(/;/g, ";\n").replace(/{/g, "\n{\n").replace(/}/g, "\n}\n").replace(/\n;\n/g, ";\n").replace(/\n\n/g, "\n");
     return code;
 
 }
@@ -338,7 +338,7 @@ function youtube_signatures(urls, data, url) {
     xhr.send();
 }
 
-const offer_proxy = () => {
+function offer_proxy() {
     var els_ = document.getElementsByClassName("proxy_403");
     for (var er = 0; er < els_.length; er++) {
         els_[er].style.display = "block";
