@@ -1,22 +1,22 @@
-document.getElementById("name-set").onclick = function() {
+document.getElementById("name-set").onclick = function () {
     this.innerHTML = 'Name Changed';
     document.getElementById("download-link").download = document.getElementById("filename").value;
 }
-document.getElementById("filename").onclick = function() {
+document.getElementById("filename").onclick = function () {
     document.getElementById("name-set").innerHTML = 'change Name'
 }
 var xhr = new XMLHttpRequest();
 xhr.open("GET", "/proxy/f/?u=" + encodeURIComponent(window.dlurl) + "&referer=" + encodeURIComponent(window.dlref));
 xhr.send();
-xhr.onload = function() {
+xhr.onload = function () {
     setTimeout(check_download, 1000)
 }
 var next_req = true
 
 function check_download() {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "/session/_/progress-poll/", true);
-    xhr.onload = function() {
+    xhr.open("GET", "/static/_/progress_poll/", true);
+    xhr.onload = function () {
         data = JSON.parse(xhr.response);
         if (data.hasOwnProperty("error")) {
             next_req = false;
@@ -38,7 +38,7 @@ function check_download() {
             document.getElementById("progressbtn").style.width = perc + "%";
         }
     }
-    xhr.onerror = function() {
+    xhr.onerror = function () {
         next_req = false;
     }
     if (next_req) {
