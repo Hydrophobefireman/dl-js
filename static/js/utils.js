@@ -15,7 +15,7 @@ function unpack(code) {
 
 }
 
-function og_search(page, what) {
+const og_search = (page, what) => {
     var resp = page.querySelector("meta[property='og:" + what + "']") || page.querySelector("meta[name='og:" + what + "']") || page.querySelector("meta[itemprop='og:" + what + "']");
     if (resp) {
         return resp.getAttribute("content");
@@ -24,14 +24,14 @@ function og_search(page, what) {
 }
 
 
-function decodehtml(html) {
+const decodehtml = (html) => {
     var txt = document.createElement("textarea");
     txt.innerHTML = html;
     return txt.value;
 }
 
-function get_yt_id(url) {
-    url = new URL(url);
+const get_yt_id = (_url) => {
+    url = new URL(_url);
     if (url.search.length == 0) {
         return url.pathname.substring(1);
     } else {
@@ -130,21 +130,6 @@ function openload(_page, base_url) {
 
 }
 
-function get_data() {
-    try {
-        document.body.click();
-        document.getElementsByTagName("div")[0].click();
-        console.log(document.getElementById('DtsBlkVFQx').innerHTML)
-        return document.getElementById('DtsBlkVFQx').innerHTML
-    } catch (e) {
-        console.log(e)
-        setTimeout(60, function () {
-            get_data()
-        })
-    }
-}
-
-
 function instagram(page, base_url) {
     var data = {};
     data.base_url = base_url;
@@ -190,7 +175,7 @@ function streamango(page, base_url) {
     return data;
 }
 
-function rapidvideo(page, base_url) {
+const rapidvideo = (page, base_url) => {
     return estream(page, base_url);
 }
 
@@ -399,7 +384,7 @@ function get_videos(url) {
         });
 }
 
-function parseqs(query) {
+const parseqs = (query) => {
     var params = {};
     query = ((query[0] == '?') ? query.substring(1) : query);
     query = decodeURI(query);
@@ -410,6 +395,8 @@ function parseqs(query) {
     }
     return params;
 }
+
+
 
 function create_video(data) {
     var div_ = document.getElementById("videos");
