@@ -15,7 +15,7 @@ var next_req = true
 
 function check_download() {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "/session/_/progress_poll/", true);
+    xhr.open("GET", "/session/_/progress-poll/", true);
     xhr.onload = function () {
         data = JSON.parse(xhr.response);
         if (data.hasOwnProperty("error")) {
