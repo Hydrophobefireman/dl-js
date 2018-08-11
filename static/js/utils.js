@@ -7,7 +7,7 @@ function unpack(code) {
             code = c;
         },
         window: {},
-        document: {}
+        document: {} 
     };
     eval("with(env) {" + code + "}");
     code = (code + "").replace(/;/g, ";\n").replace(/{/g, "\n{\n").replace(/}/g, "\n}\n").replace(/\n;\n/g, ";\n").replace(/\n\n/g, "\n");
