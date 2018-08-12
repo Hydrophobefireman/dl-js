@@ -4,8 +4,8 @@ import os
 import re
 import shutil
 import subprocess
-import threading
 import time
+from multiprocessing import Process
 import urllib.request
 import uuid
 from urllib.parse import quote, unquote, urlparse
@@ -250,7 +250,7 @@ def send_files():
         :15
     ]
     filename = session["filename"]
-    thread = threading.Thread(target=threaded_req, args=(url, referer, filename))
+    thread = Process(target=threaded_req, args=(url, referer, filename))
     thread.start()
     time.sleep(2)
     return "OK"

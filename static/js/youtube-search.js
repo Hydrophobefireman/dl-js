@@ -1,66 +1,70 @@
-function decodehtml(html) {
-    var txt = document.createElement("textarea");
-    txt.innerHTML = html;
-    return txt.value;
-}
-var doctitle = decodehtml(decodehtml(document.title));
-if (doctitle.length != 0) {
-    var titles = "Results for " + doctitle
-    document.title = titles;
-} else {
-    document.title = "Results from youtube.com"
-}
+const decodehtml = (html) => {
+        var txt = document.createElement("textarea");
+        txt.innerHTML = html;
+        return txt.value;
+    }
+    (async () => {
+        var doctitle = decodehtml(decodehtml(document.title));
+        if (doctitle.length != 0) {
+            var titles = "Results for " + doctitle
+            document.title = titles;
+        } else {
+            document.title = "Results from youtube.com"
+        }
+    })();
 
-function search() {
+const search = () => {
     var q = document.getElementById("search").value;
     var url = "/search?q=" + q;
     window.location = url;
 }
-document.getElementById("search").onkeyup = function (e) {
+document.getElementById("search").onkeyup = e => {
     if (e.keyCode == 13) {
         search()
     }
 }
-var b = document.getElementById("s-button");
-b.onmouseover = function () {
+const b = document.getElementById("s-button");
+b.onmouseover = () => {
     b.style.boxShadow = "3px 3px #d9dce0";
 }
-b.onmouseout = function () {
+b.onmouseout = () => {
     b.style.boxShadow = "0px 0px #d9dce0";
 
 }
-b.ontouchstart = function () {
+b.ontouchstart = () => {
     b.style.boxShadow = "3px 3px #d9dce0";
 }
-b.ontouchend = function () {
+b.ontouchend = () => {
     b.style.boxShadow = "0px 0px #d9dce0";
 
 }
-var get_data, extract_data, gen_results;
+let get_data;
+let extract_data;
+let gen_results;
 (function () {
-    var _$0 = this;
+    const _$0 = this;
 
-    var _3 = function (q) {
-        var req = new Request("/search/fetch/", {
+    const _3 = q => {
+        const req = new Request("/search/fetch/", {
             method: 'post',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
-            body: 'q=' + encodeURIComponent(q)
+            body: "q=" + encodeURIComponent(q)
         });
         fetch(req).then(response => response.json()).then(response => {
             extract_data(response);
-        }).then(function (result) {
+        }).then(result => {
             console.log(result);
-        }).catch(function (error) {
-            var div = document.createElement("div");
+        }).catch(error => {
+            const div = document.createElement("div");
             div.style.color = 'red';
             div.innerText = error;
             document.getElementById('youtubeprev').appendChild(div);
         });
     };
 
-    var _4 = function (data) {
+    const _4 = data => {
         html = data['html'];
         trending = data['trending'];
         console.log(trending);
@@ -80,25 +84,25 @@ var get_data, extract_data, gen_results;
                 }
             }
         } else {
-            var trend_data = reg['contents']["twoColumnBrowseResultsRenderer"]['tabs'][0]["tabRenderer"]["content"]["sectionListRenderer"]['contents'];
+            const trend_data = reg['contents']["twoColumnBrowseResultsRenderer"]['tabs'][0]["tabRenderer"]["content"]["sectionListRenderer"]['contents'];
 
             for (dat in trend_data) {
-                var part = trend_data[dat];
-                var temp_l = part["itemSectionRenderer"]["contents"][0]["shelfRenderer"]["content"];
-                var tkey = Object.keys(temp_l)[0];
-                var temps = temp_l[tkey]['items'];
+                const part = trend_data[dat];
+                const temp_l = part["itemSectionRenderer"]["contents"][0]["shelfRenderer"]["content"];
+                const tkey = Object.keys(temp_l)[0];
+                const temps = temp_l[tkey]['items'];
                 videos.push(...temps);
             }
         }
 
         for (data in videos) {
-            var vid = videos[data];
-            var vid_keys = Object.keys(vid)[0];
-            var videoId = vid[vid_keys]['videoId'];
-            var thumb = "https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg";
-            var title = vid[vid_keys]['title']['simpleText'];
-            var channel_name = vid[vid_keys]['shortBylineText']['runs'][0]['text'];
-            var channel_url = "//youtube.com" + vid[vid_keys]['shortBylineText']['runs'][0]['navigationEndpoint']['commandMetadata']['webCommandMetadata']['url'];
+            const vid = videos[data];
+            const vid_keys = Object.keys(vid)[0];
+            const videoId = vid[vid_keys]['videoId'];
+            const thumb = "https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg";
+            const title = vid[vid_keys]['title']['simpleText'];
+            const channel_name = vid[vid_keys]['shortBylineText']['runs'][0]['text'];
+            const channel_url = 'https://youtube.com' + vid[vid_keys]['shortBylineText']['runs'][0]['navigationEndpoint']['commandMetadata']['webCommandMetadata']['url'];
 
             try {
                 var preview = vid[vid_keys]['richThumbnail']['movingThumbnailRenderer']['movingThumbnailDetails']['thumbnails'][0]['url'];
@@ -107,7 +111,7 @@ var get_data, extract_data, gen_results;
             }
 
             ;
-            var video_url = "/video?url=" + encodeURIComponent("https://youtu.be/" + videoId);
+            const video_url = "/video?url=" + encodeURIComponent("https://youtu.be/" + videoId);
             json_data['data'].push({
                 "url": video_url,
                 "thumb": thumb,
@@ -121,19 +125,19 @@ var get_data, extract_data, gen_results;
         gen_results(json_data);
     };
 
-    var _5 = function (json_data) {
+    const _5 = json_data => {
         document.getElementById("skelly").style.display = "none";
         document.getElementById("content").style.display = "block";
 
-        for (var i = 0; i < json_data['data'].length; i++) {
-            var a = document.createElement("a");
-            var img = document.createElement("img");
+        for (let i = 0; i < json_data['data'].length; i++) {
+            const a = document.createElement("a");
+            const img = document.createElement("img");
             img.setAttribute("class", "rounded-image");
             img.src = json_data['data'][i]['thumb'];
-            var title = json_data['data'][i]['title'];
-            var link = json_data['data'][i]['url'];
-            var channel = json_data['data'][i]['channel'];
-            var channel_url = json_data['data'][i]['channel_url'];
+            const title = json_data['data'][i]['title'];
+            const link = json_data['data'][i]['url'];
+            const channel = json_data['data'][i]['channel'];
+            const channel_url = json_data['data'][i]['channel_url'];
             img.setAttribute("data-motion", json_data['data'][i]['preview']);
             img.setAttribute("data-img", json_data['data'][i]['thumb']);
             img.setAttribute("alt", "No Preview available or your browser does not support webp images");
@@ -141,10 +145,10 @@ var get_data, extract_data, gen_results;
             a.href = link;
             a.appendChild(img);
             a.appendChild(document.createElement("br"));
-            var bold = document.createElement("b");
+            const bold = document.createElement("b");
             bold.innerHTML = title;
             a.appendChild(bold);
-            var ch_url = document.createElement("a");
+            const ch_url = document.createElement("a");
             ch_url.href = channel_url;
             ch_url.innerHTML = channel;
 
@@ -164,7 +168,7 @@ var get_data, extract_data, gen_results;
                 this.src = this.getAttribute("data-img");
             };
 
-            var sp = document.createElement("div");
+            const sp = document.createElement("div");
             sp.innerHTML = "Video By:";
             sp.appendChild(ch_url);
             sp.appendChild(document.createElement("br"));
