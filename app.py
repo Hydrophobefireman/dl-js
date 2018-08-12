@@ -9,7 +9,7 @@ from multiprocessing import Process
 import urllib.request
 import uuid
 from urllib.parse import quote, unquote, urlparse
-
+import html
 import requests
 from flask import (
     Flask,
@@ -24,7 +24,9 @@ from flask import (
     stream_with_context,
 )
 from htmlmin.minify import html_minify
+import apIo
 
+api = apIo.Api()
 import streamsites
 import yt_sig
 
@@ -238,6 +240,23 @@ def proxy_download():
         )
     session["filesize"] = filesize
     return render_template("send_blob.html", url=url, ref=ref)
+
+@app.route("/api/1/youtube/trending")
+def yt_trending():
+    data = api.youtube(trending=True)
+    res = make_response(json.dumps(data))
+    res.headers["Content-Type"] = "application/json"
+    return res
+@app.route("/api/1/youtube/get")
+def youtube_search_():
+    _query = request.args.get("q")
+    query = html.unescape(_query) if _query else False
+    if not query:
+        return redirect("/youtube")
+    data = api.youtube(query=query)
+    res = make_response(json.dumps(data))
+    res.headers["Content-Type"] = "application/json"
+    return res
 
 
 @app.route("/proxy/f/")
