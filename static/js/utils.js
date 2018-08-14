@@ -1,20 +1,18 @@
-var parser = new DOMParser();
+const parser = new DOMParser();
 /*modified 
 http://matthewfl.com/js/unPacker.js */
-function unpack(code) {
-    var env = {
-        eval: function (c) {
+const unpack = (code) => {
+    const env = {
+        eval(c) {
             code = c;
         },
         window: {},
-        document: {} 
+        document: {}
     };
     eval("with(env) {" + code + "}");
-    code = (code + "").replace(/;/g, ";\n").replace(/{/g, "\n{\n").replace(/}/g, "\n}\n").replace(/\n;\n/g, ";\n").replace(/\n\n/g, "\n");
+    code = ("" + code).replace(/;/g, ";\n").replace(/{/g, "\n{\n").replace(/}/g, "\n}\n").replace(/\n;\n/g, ";\n").replace(/\n\n/g, "\n");
     return code;
-
 }
-
 const og_search = (page, what) => {
     var resp = page.querySelector("meta[property='og:" + what + "']") || page.querySelector("meta[name='og:" + what + "']") || page.querySelector("meta[itemprop='og:" + what + "']");
     if (resp) {
@@ -131,7 +129,7 @@ function openload(_page, base_url) {
 }
 
 function instagram(page, base_url) {
-    var data = {};
+    const data = {};
     data.base_url = base_url;
     data.video_urls = [];
     page = parser.parseFromString(page, 'text/html');
@@ -151,8 +149,8 @@ function instagram(page, base_url) {
 }
 
 function streamango(page, base_url) {
-    var re = new RegExp(/eval\(function\(p[\s\S]*?var\s*?srces=[\s\S]*?}\);/);
-    var data = {};
+    const re = new RegExp(/eval\(function\(p[\s\S]*?var\s*?srces=[\s\S]*?}\);/);
+    const data = {};
     data.video_urls = [];
     page = parser.parseFromString(page, 'text/html');
     script_ = re.exec(page.body.innerHTML)[0];
@@ -160,10 +158,10 @@ function streamango(page, base_url) {
     data.title = og_search(page, 'title');
     data.thumbnail = og_search(page, 'image');
     data.base_url = base_url;
-    for (var t in srces) {
+    for (const t in srces) {
         ret = srces[t];
         url = ret.src;
-        if (url.indexOf("http") == -1) {
+        if (!url.includes("http")) {
             url = "https:" + url;
         }
         q = ret.height;
@@ -180,7 +178,7 @@ const rapidvideo = (page, base_url) => {
 }
 
 function watcheng(page, base_url) {
-    var data = {};
+    const data = {};
     data.video_urls = [];
     page = parser.parseFromString(page, 'text/html');
     data.title = page.title;
@@ -194,8 +192,10 @@ function watcheng(page, base_url) {
     return data;
 }
 
+
+
 function estream(page, base_url) {
-    var data = {};
+    const data = {};
     data.video_urls = [];
     page = parser.parseFromString(page, 'text/html');
     data.title = page.title;
@@ -203,9 +203,9 @@ function estream(page, base_url) {
     data.thumbnail = thumbnail || "//null";
     data.base_url = base_url;
     sources = page.getElementsByTagName("source");
-    for (var i = 0; i < sources.length; i++) {
+    for (let i = 0; i < sources.length; i++) {
         el = sources[i];
-        if (el.getAttribute("src").indexOf("m3u8") == -1) {
+        if (!el.getAttribute("src").includes("m3u8")) {
             data.video_urls.push({
                 "url": el.getAttribute("src"),
                 "quality": el.getAttribute("res") || el.getAttribute("label") || el.getAttribute("data-res")
@@ -213,11 +213,11 @@ function estream(page, base_url) {
         }
     }
     return data;
-
 }
 
+
 function yourupload(page, base_url) {
-    var data = {};
+    const data = {};
     data.video_urls = [];
 
     page = parser.parseFromString(page, 'text/html');
@@ -339,8 +339,8 @@ function youtube_signatures(urls, data, url) {
 }
 
 function offer_proxy() {
-    var els_ = document.getElementsByClassName("proxy_403");
-    for (var er = 0; er < els_.length; er++) {
+    const els_ = document.getElementsByClassName("proxy_403");
+    for (let er = 0; er < els_.length; er++) {
         els_[er].style.display = "block";
     }
 }
@@ -385,17 +385,16 @@ function get_videos(url) {
 }
 
 const parseqs = (query) => {
-    var params = {};
+    const params = {};
     query = ((query[0] == '?') ? query.substring(1) : query);
     query = decodeURI(query);
-    var vars = query.split('&');
-    for (var i = 0; i < vars.length; i++) {
-        var pair = vars[i].split('=');
+    const vars = query.split('&');
+    for (let i = 0; i < vars.length; i++) {
+        const pair = vars[i].split('=');
         params[pair[0]] = decodeURIComponent(pair[1]);
     }
     return params;
 }
-
 
 
 function create_video(data) {
@@ -466,7 +465,6 @@ function create_video(data) {
     document.getElementById("skelly").style.display = 'none';
     document.getElementById("dlfail").style.display = 'block';
 }
-
 
 function start_create_video(data) {
     try {
