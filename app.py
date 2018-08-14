@@ -241,12 +241,14 @@ def proxy_download():
     session["filesize"] = filesize
     return render_template("send_blob.html", url=url, ref=ref)
 
+
 @app.route("/api/1/youtube/trending")
 def yt_trending():
     data = api.youtube(trending=True)
     res = make_response(json.dumps(data))
     res.headers["Content-Type"] = "application/json"
     return res
+
 @app.route("/api/1/youtube/get")
 def youtube_search_():
     _query = request.args.get("q")
