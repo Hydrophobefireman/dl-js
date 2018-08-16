@@ -310,6 +310,8 @@ def progresses():
                 + str(session.get("content-type"))
                 + "&f="
                 + quote(filename),
+                "done": curr_size,
+                "total": filesize,
             }
         )
     else:
