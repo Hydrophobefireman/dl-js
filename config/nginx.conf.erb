@@ -60,7 +60,7 @@ http {
 		}
 		location /static/ {
 			root app;
-			try_files $uri;
+			try_files $uri =403;
 		}
 	}
 }
