@@ -140,6 +140,12 @@ http {
 			proxy_set_header Host $http_host;
 			proxy_redirect off;
 			proxy_pass http://app_server;
+		}		
+		location /get-cached/x/ {
+			autoindex on;
+			sendfile on;
+			alias /app/saves/;
+			try_files $arg_f =403;
 		}
 		location /static/ {
 			alias /app/static/;
