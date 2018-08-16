@@ -306,10 +306,7 @@ def progresses():
         return json.dumps(
             {
                 "file": True,
-                "link": "/get-cached/*/?mt="
-                + str(session.get("content-type"))
-                + "&f="
-                + quote(filename),
+                "link": "/get-cached/x/" + "?f=" + quote(filename),
                 "done": curr_size,
                 "total": filesize,
             }
@@ -321,30 +318,6 @@ def progresses():
 @app.route("/test/proxy/")
 def proxy_tests():
     return render_template("test.html")
-
-
-@app.route("/get-cached/*/", strict_slashes=False)
-def send_downloaded_file():
-    filename = request.args.get("f")
-    print("******************\n", request.headers, "***********************")
-    if not os.path.isfile(os.path.join(SAVE_DIR, filename)):
-        return "No File"
-    fsize = os.path.getsize(os.path.join(SAVE_DIR, filename))
-    resp = make_response(send_from_directory(SAVE_DIR, filename))
-    resp.headers["Accept-Ranges"] = "bytes"
-    # Request headers are 0- or no header included
-    if (
-        "Content-Range" not in resp.headers
-        or str(resp.headers.get("Content-Range")).lower() == "bytes=0-"
-    ):
-        resp.headers["Content-Range"] = "Bytes=0-%d/%d" % (fsize - 1, fsize)
-    resp.headers["Content-Type"] = (
-        session.get("content-type")
-        or request.args.get("mt")
-        or "application/octet-stream"
-    )
-    print(resp.headers)
-    return resp
 
 
 def get_funcname(url):
