@@ -55,11 +55,12 @@ http {
 		location /saves/ {
 			autoindex on;	
 			sendfile on;
-			root app;
+			alias /app/saves/;
 			try_files $uri @proxy_to_app;
 		}
 		location /static/ {
-			try_files $uri @proxy_to_app;
+			root app;
+			try_files $uri;
 		}
 	}
 }
