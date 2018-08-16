@@ -31,12 +31,6 @@ import yt_sig
 api = apIo.Api()
 
 app = Flask(__name__)
-try:
-    from flask_compress import Compress
-
-    Compress(app)
-except ImportError:
-    pass
 ua = "Mozilla/5.0 (Windows; U; Windows NT 10.0; en-US)\
  AppleWebKit/604.1.38 (KHTML, like Gecko) Chrome/68.0.3325.162"
 
@@ -236,28 +230,9 @@ def proxy_download():
     return render_template("send_blob.html", url=url, ref=ref)
 
 
-@app.route("/api/1/youtube/trending")
-def yt_trending():
-    data = api.youtube(trending=True)
-    res = make_response(json.dumps(data))
-    res.headers["Content-Type"] = "application/json"
-    return res
-
-
-@app.route("/api/1/youtube/get")
-def youtube_search_():
-    _query = request.args.get("q")
-    query = html.unescape(_query) if _query else False
-    if not query:
-        return redirect("/youtube")
-    data = api.youtube(query=query)
-    res = make_response(json.dumps(data))
-    res.headers["Content-Type"] = "application/json"
-    return res
-
-
 @app.route("/proxy/f/")
 def send_files():
+    print("*************\n", request.headers, "*************\n")
     print(session["filesize"])
     url = unquote(request.args.get("u"))
     referer = request.args.get("referer")
@@ -318,6 +293,26 @@ def progresses():
 @app.route("/test/proxy/")
 def proxy_tests():
     return render_template("test.html")
+
+
+@app.route("/api/1/youtube/trending")
+def yt_trending():
+    data = api.youtube(trending=True)
+    res = make_response(json.dumps(data))
+    res.headers["Content-Type"] = "application/json"
+    return res
+
+
+@app.route("/api/1/youtube/get")
+def youtube_search_():
+    _query = request.args.get("q")
+    query = html.unescape(_query) if _query else False
+    if not query:
+        return redirect("/youtube")
+    data = api.youtube(query=query)
+    res = make_response(json.dumps(data))
+    res.headers["Content-Type"] = "application/json"
+    return res
 
 
 def get_funcname(url):
