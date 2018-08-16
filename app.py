@@ -9,7 +9,7 @@ import time
 import urllib.request
 import uuid
 from urllib.parse import quote, unquote, urlparse
-
+from ctypes import mimes as _mime_types_
 import requests
 from flask import (
     Flask,
@@ -262,11 +262,12 @@ def send_files():
     url = unquote(request.args.get("u"))
     referer = request.args.get("referer")
     print("Downloading:'" + url[:50] + "...'")
-    session["filename"] = base64.urlsafe_b64encode(str(uuid.uuid4()).encode()).decode()[
-        :15
-    ]
-    filename = session["filename"]
-    thread = threading.Thread(target=threaded_req, args=(url, referer, filename))
+    _filename = base64.urlsafe_b64encode(str(uuid.uuid4()).encode()).decode()[:15]
+    _mime = _mime_types_.get(session.get("content-type")) or ".bin"
+    session["filename"] = _filename + _mime
+    thread = threading.Thread(
+        target=threaded_req, args=(url, referer, session["filename]"])
+    )
     thread.start()
     time.sleep(2)
     return "OK"
