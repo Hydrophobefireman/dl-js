@@ -1,15 +1,15 @@
 import base64
+import html
 import json
 import os
 import re
-import shutil
 import subprocess
+import threading
 import time
-from multiprocessing import Process
 import urllib.request
 import uuid
 from urllib.parse import quote, unquote, urlparse
-import html
+
 import requests
 from flask import (
     Flask,
@@ -18,17 +18,17 @@ from flask import (
     redirect,
     render_template,
     request,
-    send_file,
     send_from_directory,
     session,
     stream_with_context,
 )
 from htmlmin.minify import html_minify
-import apIo
 
-api = apIo.Api()
+import apIo
 import streamsites
 import yt_sig
+
+api = apIo.Api()
 
 app = Flask(__name__)
 try:
@@ -41,7 +41,7 @@ ua = "Mozilla/5.0 (Windows; U; Windows NT 10.0; en-US)\
  AppleWebKit/604.1.38 (KHTML, like Gecko) Chrome/68.0.3325.162"
 
 app.secret_key = "7bf9a280"
-
+SAVE_DIR = os.path.join(app.root_path, "saves")
 basic_headers = {
     "Accept-Encoding": "gzip, deflate",
     "User-Agent": ua,
@@ -74,25 +74,22 @@ def video():
     url = request.args.get("url")
     if url is None:
         return redirect("/", code=302)
-    url = request.args.get("url")
     data = streamsites.check_for_stream_sites(url, request.headers.get("User-Agent"))
-    if not data:
-        return html_minify(render_template("video.html", url=url))
-    else:
+    if data:
         return html_minify(
             render_template("multioptions.html", urls=data, url=url, number_=len(data))
         )
+    return html_minify(render_template("video.html", url=url))
 
 
 @app.route("/videos/fetch/", methods=["POST"])
 def get_video():
     try:
-        url = request.form["url"]
-        if not url.startswith("http"):
-            url = "http://" + url
-        url = check_for_redirects(url)
+        _url = request.form["url"]
+        _url = "http://" + _url if not _url.startswith("http") else _url
+        url = check_for_redirects(_url)
     except:
-        return json.dumps({"error": "not supported"})
+        return json.dumps({"error": "An error occured..please check the url"})
     reg = r"^https?://(.{3})?\.?(daclips|thevideo|vev.io)"
     if re.search(reg, url) is not None:
         redirect = "https://proxy-py.herokuapp.com/api/parse_query?url=%s" % (
@@ -144,7 +141,6 @@ def stream_cache():
     ua = request.headers.get("User-Agent")
     file_s = unquote(request.args.get("u"))
     sess = requests.Session()
-
     files_n = str(uuid.uuid4())
     filename = "%s.mp4" % (files_n)
     fsize = sess.head(
@@ -195,9 +191,7 @@ def send_statics_no_range():
 @app.route("/youtube/js/")
 def sig_func_name():
     url = request.args["url"]
-    funcs = yt_sig.main_decrypt().get_js(url)
-    sig_js = funcs[0]
-    funcname = funcs[1]
+    sig_js, funcname = yt_sig.main_decrypt().get_js(url)
     res = make_response(json.dumps({"sig_js": sig_js, "funcname": funcname}))
     res.headers["Content-Type"] = "application/json"
     return res
@@ -249,6 +243,7 @@ def yt_trending():
     res.headers["Content-Type"] = "application/json"
     return res
 
+
 @app.route("/api/1/youtube/get")
 def youtube_search_():
     _query = request.args.get("q")
@@ -271,14 +266,15 @@ def send_files():
         :15
     ]
     filename = session["filename"]
-    thread = Process(target=threaded_req, args=(url, referer, filename))
+    thread = threading.Thread(target=threaded_req, args=(url, referer, filename))
     thread.start()
     time.sleep(2)
     return "OK"
 
 
 def threaded_req(url, referer, filename):
-    # sess = requests.Session()
+    if not os.path.isdir(SAVE_DIR):
+        os.mkdir(SAVE_DIR)
     parsed_url = urlparse(url)
     print("STARTING DOWNLOAD")
     dl_headers = {**basic_headers, "host": parsed_url.netloc, "referer": referer}
@@ -287,7 +283,7 @@ def threaded_req(url, referer, filename):
     for k, v in dl_headers.items():
         opener.addheaders = [(k, v)]
     urllib.request.install_opener(opener)
-    urllib.request.urlretrieve(url, filename)
+    urllib.request.urlretrieve(url, os.path.join(SAVE_DIR, filename))
     print("Downloaded File")
 
 
@@ -299,7 +295,7 @@ def progresses():
         return json.dumps({"error": "no"})
     filesize = int(filesize)
     try:
-        curr_size = os.path.getsize(filename)
+        curr_size = os.path.getsize(os.path.join(SAVE_DIR, filename))
     except:
         return json.dumps({"error": "no"})
     if curr_size >= filesize:
@@ -318,14 +314,19 @@ def progresses():
         return json.dumps({"done": curr_size, "total": filesize})
 
 
+@app.route("/test/proxy/")
+def proxy_tests():
+    return render_template("test.html")
+
+
 @app.route("/get-cached/*/", strict_slashes=False)
 def send_downloaded_file():
     filename = request.args.get("f")
     print("******************\n", request.headers, "***********************")
-    if not os.path.isfile(filename):
+    if not os.path.isfile(os.path.join(SAVE_DIR, filename)):
         return "No File"
-    fsize = os.path.getsize(filename)
-    resp = make_response(send_from_directory(app.root_path, filename))
+    fsize = os.path.getsize(os.path.join(SAVE_DIR, filename))
+    resp = make_response(send_from_directory(SAVE_DIR, filename))
     resp.headers["Accept-Ranges"] = "bytes"
     # Request headers are 0- or no header included
     if (
