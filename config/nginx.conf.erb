@@ -53,9 +53,7 @@ http {
 			proxy_pass http://app_server;
 		}
 		location /saves/ {
-			internal;
 			sendfile on;
-			autoindex on;
 			try_files $uri @proxy_to_app;
 		}
 		location /static/ {
