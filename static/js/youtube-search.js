@@ -1,112 +1,215 @@
-function decodehtml(html) {
-    var txt = document.createElement("textarea");
-    return txt.innerHTML = html, txt.value
+function decodehtml(s) {
+    /** @type {!Element} */
+    var ta = document.createElement("textarea");
+    return ta.innerHTML = s, ta.value;
 }
 var doctitle = decodehtml(decodehtml(document.title));
 if (0 != doctitle.length) {
+    /** @type {string} */
     var titles = "Results for " + doctitle;
-    document.title = titles
-} else document.title = "Results from youtube.com";
-
-function search() {
-    var q, url = "/search?q=" + document.getElementById("search").value;
-    window.location = url
+    /** @type {string} */
+    document.title = titles;
+} else {
+    /** @type {string} */
+    document.title = "Results from youtube.com";
 }
-document.getElementById("search").onkeyup = function (e) {
-    13 == e.keyCode && search()
+/**
+ * @return {undefined}
+ */
+function search() {
+    var q;
+    /** @type {string} */
+    var http_url = "/search?q=" + document.getElementById("search").value;
+    /** @type {string} */
+    window.location = http_url;
+}
+/**
+ * @param {!Event} event
+ * @return {undefined}
+ */
+document.getElementById("search").onkeyup = function (event) {
+    if (13 == event.keyCode) {
+        search();
+    }
 };
-var b = document.getElementById("s-button"),
-    get_data, extract_data, gen_results;
+/** @type {(Element|null)} */
+var b = document.getElementById("s-button");
+var get_data;
+var extract_data;
+var gen_results;
 b.onmouseover = function () {
-        b.style.boxShadow = "3px 3px #d9dce0"
+        /** @type {string} */
+        b.style.boxShadow = "3px 3px #d9dce0";
     }, b.onmouseout = function () {
-        b.style.boxShadow = "0px 0px #d9dce0"
+        /** @type {string} */
+        b.style.boxShadow = "0px 0px #d9dce0";
     }, b.ontouchstart = function () {
-        b.style.boxShadow = "3px 3px #d9dce0"
+        /** @type {string} */
+        b.style.boxShadow = "3px 3px #d9dce0";
     }, b.ontouchend = function () {
-        b.style.boxShadow = "0px 0px #d9dce0"
+        /** @type {string} */
+        b.style.boxShadow = "0px 0px #d9dce0";
     },
     function () {
-        var _$0 = this,
-            _3 = function (q) {
-                var req = new Request("/search/fetch/", {
-                    method: "post",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded"
-                    },
-                    body: "q=" + encodeURIComponent(q)
+        var self = this;
+        /**
+         * @param {?} keyword
+         * @return {undefined}
+         */
+        var search = function (keyword) {
+            /** @type {!Request} */
+            var request = new Request("/search/fetch/", {
+                method: "post",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: "q=" + encodeURIComponent(keyword)
+            });
+            fetch(request).then((rawResp) => {
+                return rawResp.json();
+            }).then((data) => {
+                extract_data(data);
+            }).then(function (animate_param) {
+                console.log(animate_param);
+            }).catch(function (snippetText) {
+                /** @type {!Element} */
+                var div = document.createElement("div");
+                /** @type {string} */
+                div.style.color = "red";
+                /** @type {*} */
+                div.innerText = snippetText;
+                document.getElementById("youtubeprev").appendChild(div);
+            });
+        };
+        /**
+         * @param {string} p
+         * @return {undefined}
+         */
+        var render = function (p) {
+            if (html = p.html, trending = p.trending, console.log(trending), regex = new RegExp(/ytInitialData"]\s=\s({[\s\S]*?});/, "gm"), json_data = {}, json_data.data = [], videos = [], m = regex.exec(html), reg = JSON.parse(m[1]), trending) {
+                var colorNames = reg.contents.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer.contents;
+                for (dat in colorNames) {
+                    var part;
+                    var data = colorNames[dat].itemSectionRenderer.contents[0].shelfRenderer.content;
+                    var tkey;
+                    var cs = data[Object.keys(data)[0]].items;
+                    videos.push(...cs);
+                }
+            } else {
+                for (opts in contents = reg.contents.twoColumnSearchResultsRenderer.primaryContents.sectionListRenderer.contents[0].itemSectionRenderer.contents, contents) {
+                    if (null != contents[opts].videoRenderer) {
+                        videos.push(contents[opts]);
+                    }
+                }
+            }
+            for (p in videos) {
+                var extracts = videos[p];
+                /** @type {string} */
+                var j = Object.keys(extracts)[0];
+                var id = extracts[j].videoId;
+                /** @type {string} */
+                var thumb = "https://i.ytimg.com/vi/" + id + "/hqdefault.jpg";
+                var title = extracts[j].title.simpleText;
+                var nick = extracts[j].shortBylineText.runs[0].text;
+                /** @type {string} */
+                var channel_url = "//youtube.com" + extracts[j].shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url;
+                try {
+                    var api = extracts[j].richThumbnail.movingThumbnailRenderer.movingThumbnailDetails.thumbnails[0].url;
+                } catch (e) {
+                    /** @type {null} */
+                    api = null;
+                }
+                /** @type {string} */
+                var requestOrUrl = "/video?url=" + encodeURIComponent("https://youtu.be/" + id);
+                json_data.data.push({
+                    url: requestOrUrl,
+                    thumb: thumb,
+                    title: title,
+                    channel: nick,
+                    channel_url: channel_url,
+                    preview: api
                 });
-                fetch(req).then(response => response.json()).then(response => {
-                    extract_data(response)
-                }).then(function (result) {
-                    console.log(result)
-                }).catch(function (error) {
-                    var div = document.createElement("div");
-                    div.style.color = "red", div.innerText = error, document.getElementById("youtubeprev").appendChild(div)
-                })
-            },
-            _4 = function (data) {
-                if (html = data.html, trending = data.trending, console.log(trending), regex = new RegExp(/ytInitialData\"]\s=\s({[\s\S]*?});/, "gm"), json_data = {}, json_data.data = [], videos = [], m = regex.exec(html), reg = JSON.parse(m[1]), trending) {
-                    var trend_data = reg.contents.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer.contents;
-                    for (dat in trend_data) {
-                        var part, temp_l = trend_data[dat].itemSectionRenderer.contents[0].shelfRenderer.content,
-                            tkey, temps = temp_l[Object.keys(temp_l)[0]].items;
-                        videos.push(...temps)
-                    }
-                } else
-                    for (opts in contents = reg.contents.twoColumnSearchResultsRenderer.primaryContents.sectionListRenderer.contents[0].itemSectionRenderer.contents, contents) null != contents[opts].videoRenderer && videos.push(contents[opts]);
-                for (data in videos) {
-                    var vid = videos[data],
-                        vid_keys = Object.keys(vid)[0],
-                        videoId = vid[vid_keys].videoId,
-                        thumb = "https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg",
-                        title = vid[vid_keys].title.simpleText,
-                        channel_name = vid[vid_keys].shortBylineText.runs[0].text,
-                        channel_url = "//youtube.com" + vid[vid_keys].shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url;
-                    try {
-                        var preview = vid[vid_keys].richThumbnail.movingThumbnailRenderer.movingThumbnailDetails.thumbnails[0].url
-                    } catch (e) {
-                        var preview = null
-                    }
-                    var video_url = "/video?url=" + encodeURIComponent("https://youtu.be/" + videoId);
-                    json_data.data.push({
-                        url: video_url,
-                        thumb: thumb,
-                        title: title,
-                        channel: channel_name,
-                        channel_url: channel_url,
-                        preview: preview
-                    })
-                }
-                gen_results(json_data)
-            },
-            _5 = function (json_data) {
-                document.getElementById("skelly").style.display = "none", document.getElementById("content").style.display = "block";
-                for (var i = 0; i < json_data.data.length; i++) {
-                    var a = document.createElement("a"),
-                        img = document.createElement("img");
-                    img.setAttribute("class", "rounded-image"), img.src = json_data.data[i].thumb;
-                    var title = json_data.data[i].title,
-                        link = json_data.data[i].url,
-                        channel = json_data.data[i].channel,
-                        channel_url = json_data.data[i].channel_url;
-                    img.setAttribute("data-motion", json_data.data[i].preview), img.setAttribute("data-img", json_data.data[i].thumb), img.setAttribute("alt", "No Preview available or your browser does not support webp images"), img.style.display = "inline-block", a.href = link, a.appendChild(img), a.appendChild(document.createElement("br"));
-                    var bold = document.createElement("b");
-                    bold.innerHTML = title, a.appendChild(bold);
-                    var ch_url = document.createElement("a");
-                    ch_url.href = channel_url, ch_url.innerHTML = channel, img.onmouseover = function () {
-                        this.src = this.getAttribute("data-motion")
-                    }, img.onmouseout = function () {
-                        this.src = this.getAttribute("data-img")
-                    }, img.ontouchstart = function () {
-                        this.src = this.getAttribute("data-motion")
-                    }, img.ontouchend = function () {
-                        this.src = this.getAttribute("data-img")
-                    };
-                    var sp = document.createElement("div");
-                    sp.innerHTML = "Video By:", sp.appendChild(ch_url), sp.appendChild(document.createElement("br")), sp.appendChild(document.createElement("br")), document.getElementById("content").appendChild(a), document.getElementById("content").appendChild(sp)
-                }
-                return "Created Results"
-            };
-        _$0.get_data = _3, _$0.extract_data = _4, _$0.gen_results = _5
+            }
+            gen_results(json_data);
+        };
+        /**
+         * @param {!Object} suiteContainer
+         * @return {?}
+         */
+        var init = function (suiteContainer) {
+            /** @type {string} */
+            document.getElementById("skelly").style.display = "none";
+            /** @type {string} */
+            document.getElementById("content").style.display = "block";
+            /** @type {number} */
+            var i = 0;
+            for (; i < suiteContainer.data.length; i++) {
+                /** @type {!Element} */
+                var node = document.createElement("a");
+                /** @type {!Element} */
+                var element = document.createElement("img");
+                element.setAttribute("class", "rounded-image");
+                element.src = suiteContainer.data[i].thumb;
+                var name = suiteContainer.data[i].title;
+                var src = suiteContainer.data[i].url;
+                var info = suiteContainer.data[i].channel;
+                var uriContent = suiteContainer.data[i].channel_url;
+                element.setAttribute("data-motion", suiteContainer.data[i].preview);
+                element.setAttribute("data-img", suiteContainer.data[i].thumb);
+                element.setAttribute("alt", "No Preview available or your browser does not support webp images");
+                /** @type {string} */
+                element.style.display = "inline-block";
+                node.href = src;
+                node.appendChild(element);
+                node.appendChild(document.createElement("br"));
+                /** @type {!Element} */
+                var nOpt = document.createElement("b");
+                nOpt.innerHTML = name;
+                node.appendChild(nOpt);
+                /** @type {!Element} */
+                var a = document.createElement("a");
+                a.href = uriContent;
+                a.innerHTML = info;
+                /**
+                 * @return {undefined}
+                 */
+                element.onmouseover = function () {
+                    this.src = this.getAttribute("data-motion");
+                };
+                /**
+                 * @return {undefined}
+                 */
+                element.onmouseout = function () {
+                    this.src = this.getAttribute("data-img");
+                };
+                /**
+                 * @return {undefined}
+                 */
+                element.ontouchstart = function () {
+                    this.src = this.getAttribute("data-motion");
+                };
+                /**
+                 * @return {undefined}
+                 */
+                element.ontouchend = function () {
+                    this.src = this.getAttribute("data-img");
+                };
+                /** @type {!Element} */
+                var output = document.createElement("div");
+                /** @type {string} */
+                output.innerHTML = "Video By:";
+                output.appendChild(a);
+                output.appendChild(document.createElement("br"));
+                output.appendChild(document.createElement("br"));
+                document.getElementById("content").appendChild(node);
+                document.getElementById("content").appendChild(output);
+            }
+            return "Created Results";
+        };
+        /** @type {function(?): undefined} */
+        self.get_data = search;
+        /** @type {function(string): undefined} */
+        self.extract_data = render;
+        /** @type {function(!Object): ?} */
+        self.gen_results = init;
     }.call(this);
