@@ -49,11 +49,10 @@ http {
 			proxy_pass http://app_server;
 		}
 		location /saves/ {
-
 			internal;
 			root /app/;
 			sendfile on;
-			try_files $uri;
+			try_files $uri =403;
 		}
 	}
 }
