@@ -274,6 +274,7 @@ def send_files():
 
 
 def threaded_req(url, referer, filename):
+    print("filename:", filename)
     if not os.path.isdir(SAVE_DIR):
         os.mkdir(SAVE_DIR)
     parsed_url = urlparse(url)
