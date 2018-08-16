@@ -37,13 +37,13 @@ const check_download = () => {
         document.getElementById("total-size-int").innerHTML = (total / (1024 * 1024)).toFixed(2);
         document.getElementById("progressbtn").style.display = 'block';
         document.getElementById("progressbtn").style.width = perc + "%";
+
     }
-}
-xhr.onerror = () => {
-    next_req = false;
-}
-if (next_req) {
-    xhr.send();
-    setTimeout(check_download, 3000);
-}
+    xhr.onerror = () => {
+        next_req = false;
+    }
+    if (next_req) {
+        xhr.send();
+        setTimeout(check_download, 3000);
+    }
 }
