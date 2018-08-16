@@ -48,7 +48,6 @@ http {
 		}
 		location /saves/ {
 			internal;
-			root app;
 			sendfile on;
 			autoindex on;
 			try_files $uri =403;
