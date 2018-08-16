@@ -11,15 +11,30 @@ events {
 http {
 
 	gzip on;
-	gzip_comp_level 6;
+	gzip_comp_level 7;
 	gzip_min_length 512;
-
+	gzip_vary on;
 	server_tokens off;
-
-	log_format l2met 'LOG=$request_time USER_AGENT=$http_user_agent' X-Forwarded-For=$http_x_forwarded_for;
+	gzip_types text/css
+	text/plain
+	text/javascript
+	application/javascript
+	application/json
+	application/x-javascript
+	application/xml
+	application/xml+rss
+	application/xhtml+xml
+	application/x-font-ttf
+	application/x-font-opentype
+	application/vnd.ms-fontobject
+	image/svg+xml
+	application/rss+xml
+	application/atom_xml;
+	log_format l2met 'USER_AGENT=$http_user_agent X-Forwarded-For=$http_x_forwarded_for';
 	access_log logs/nginx/access.log l2met;
 	error_log logs/nginx/error.log;
 	types {
+
 		text/html html htm shtml;
 		text/css css;
 		text/xml xml;
@@ -134,20 +149,20 @@ http {
 		keepalive_timeout 5;
 
 		location / {
-
+			proxy_set_header X-URI $uri
 			proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 			proxy_set_header Host $http_host;
 			proxy_redirect off;
 			proxy_pass http://app_server;
 		}
 		location /saves/ {
-
 			autoindex on;
 			sendfile on;
 			alias /app/saves/;
 			try_files $uri =403;
 		}
 		location /static/ {
+
 			alias /app/static/;
 			try_files $uri =403;
 		}
