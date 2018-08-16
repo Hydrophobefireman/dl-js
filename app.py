@@ -266,7 +266,7 @@ def send_files():
     _mime = _mime_types_.get(session.get("content-type")) or ".bin"
     session["filename"] = _filename + _mime
     thread = threading.Thread(
-        target=threaded_req, args=(url, referer, session["filename]"])
+        target=threaded_req, args=(url, referer, session["filename"])
     )
     thread.start()
     time.sleep(2)
