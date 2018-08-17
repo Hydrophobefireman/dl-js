@@ -40,7 +40,7 @@ http {
 		add_header	X-Frame-Options "SAMEORIGIN";
 		pagespeed 	on;
 		pagespeed 	FileCachePath "/tmp/pagespeed/";
-		pagespeed 	XHeaderValue "pagespeed";
+		pagespeed 	XHeaderValue "Speedy";
 		pagespeed 	PreserveUrlRelativity on;
 		pagespeed 	LowercaseHtmlNames on;
 		pagespeed 	ModifyCachingHeaders off;
@@ -67,6 +67,7 @@ http {
 		
 		location / {
 			proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+			proxy_set_header X-Forwarded-Proto $proxy_add_x_forwarded_proto;
 			proxy_set_header Host $http_host;
 			proxy_redirect off;
 			proxy_pass http://app_server;
