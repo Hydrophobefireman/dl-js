@@ -1,5 +1,4 @@
-mimes = {
-    None: ".bin",
+{
     "application/x-bytecode.python": ".pyc",
     "application/1d-interleaved-parityfec": ".bin",
     "application/3gpp-ims+xml": ".bin",
@@ -1998,6 +1997,5 @@ mimes = {
     "x-world/x-vrml": ".vrml",
     "x-world/x-vrt": ".vrt",
     "xgl/drawing": ".xgz",
-    "xgl/movie": ".xmz",
+    "xgl/movie": ".xmz"
 }
-

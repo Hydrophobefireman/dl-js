@@ -9,7 +9,6 @@ import time
 import urllib.request
 import uuid
 from urllib.parse import quote, unquote, urlparse
-from ctypes import mimes as _mime_types_
 import requests
 from flask import (
     Flask,
@@ -44,6 +43,9 @@ basic_headers = {
     "dnt": "1",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
 }
+
+with open(os.path.join("static", ".mimetypes")) as f:
+    _mime_types_ = json.loads(f.read())
 
 
 @app.before_request
