@@ -22,14 +22,14 @@ from flask import (
     stream_with_context,
 )
 from htmlmin.minify import html_minify
-
+from werkzeug.contrib.fixers import ProxyFix
 import apIo
 import streamsites
 import yt_sig
 
 api = apIo.Api()
-
 app = Flask(__name__)
+ProxyFix(app)
 ua = "Mozilla/5.0 (Windows; U; Windows NT 10.0; en-US)\
  AppleWebKit/604.1.38 (KHTML, like Gecko) Chrome/68.0.3325.162"
 
@@ -48,7 +48,7 @@ with open(os.path.join("static", ".mimetypes")) as f:
     _mime_types_ = json.loads(f.read())
 
 
-'''@app.before_request
+@app.before_request
 def enforce_https():
     if (
         request.endpoint in app.view_functions
@@ -59,7 +59,6 @@ def enforce_https():
     ):
         return redirect(request.url.replace("http://", "https://"), code=301)
 
-'''
 @app.route("/", strict_slashes=False)
 def index():
     return html_minify(render_template("index.html"))
