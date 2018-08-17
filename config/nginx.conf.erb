@@ -70,7 +70,7 @@ http {
 			proxy_set_header Host $http_host;
 			proxy_redirect off;
 			 if ($scheme != "https") {
-   			  return 301 https://$host$request_uri permanent;
+   			  return 301 https://$host$request_uri;
  			}
 			proxy_pass http://app_server;
 		}		
