@@ -48,7 +48,7 @@ with open(os.path.join("static", ".mimetypes")) as f:
     _mime_types_ = json.loads(f.read())
 
 
-@app.before_request
+'''@app.before_request
 def enforce_https():
     if (
         request.endpoint in app.view_functions
@@ -59,7 +59,7 @@ def enforce_https():
     ):
         return redirect(request.url.replace("http://", "https://"), code=301)
 
-
+'''
 @app.route("/", strict_slashes=False)
 def index():
     return html_minify(render_template("index.html"))
