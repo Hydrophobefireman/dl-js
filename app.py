@@ -50,11 +50,10 @@ with open(os.path.join("static", ".mimetypes")) as f:
 
 @app.before_request
 def enforce_https():
-    print(request.url)
-    print(request.headers)
     if (
         request.endpoint in app.view_functions
         and request.url.startswith("http://")
+        and not request.is_secure
         and "127.0.0.1" not in request.url
         and "localhost" not in request.url
         and "herokuapp." in request.url
