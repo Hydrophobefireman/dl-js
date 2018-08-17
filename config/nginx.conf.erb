@@ -72,13 +72,6 @@ http {
 		pagespeed	EnableFilters inline_google_font_css;		# google fonts
 		pagespeed 	EnableFilters insert_dns_prefetch;			# dns
 		pagespeed 	EnableFilters extend_cache;					# caching
-
-		# Ensure requests for pagespeed optimized resources go to the pagespeed handler
-		# and no extraneous headers get set.
-		location ~ \.pagespeed\.([a-z]\.)?[a-z]{2}\.[^.]{10}\.[^.]+ {
-			add_header "" "";
-		}
-		
 		# pagespeed handlers
 		location ~ "^/pagespeed_static/" { 
 
