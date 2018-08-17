@@ -50,6 +50,8 @@ with open(os.path.join("static", ".mimetypes")) as f:
 
 @app.before_request
 def enforce_https():
+    print(request.url)
+    print(request.headers)
     if (
         request.endpoint in app.view_functions
         and request.url.startswith("http://")
