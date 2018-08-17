@@ -47,7 +47,7 @@ http {
 		pagespeed 	AvoidRenamingIntrospectiveJavascript off;
 		pagespeed 	MaxCacheableContentLength -1;
 		pagespeed FetchHttps enable;
-	
+		pagespeed RespectXForwardedProto on;
 	# pagespeed javascript experiment
 		pagespeed 	UseExperimentalJsMinifier on;
 	
