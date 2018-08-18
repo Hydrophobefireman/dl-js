@@ -12,7 +12,7 @@ var next_req = true;
     xhr.send();
     xhr.onload = function () {
         window.dl_start = performance.now();
-        setTimeout(check_download, 1000)
+        setTimeout(check_download, 1200)
     }
 })();
 var analyse_perf = function (b, c) {
