@@ -135,7 +135,6 @@ def get_video():
 
 @app.route("/mp3extract/", strict_slashes=False)
 def extract_to_mp3():
-    print(request.headers)
     _url = unquote(request.args.get("mp3u"))
     mt = "audio/mp3"
     return html_minify(render_template("mp3.html", u=_url, mime=quote(mt)))
@@ -174,7 +173,6 @@ def proxy_download_before_send(fn, r, dl, fsize, completed):
     yield "data: ffmpeg-init\n\n"
     g = """ffmpeg -i "%s" "%s" """ % (fn, dl)
     to_ = "/send-cached/*/download/?url=%s" % (dl)
-    print(g)
     p = subprocess.Popen([g], shell=True)
     while p.poll() is None:
         time.sleep(1)
@@ -223,12 +221,13 @@ def proxy_download():
     req = requests.Session().head(
         url, headers={"User-Agent": ua, "Referer": ref}, allow_redirects=True
     )
-    print(req.headers)
     url = req.url
     req_data = req.headers
     mt = req_data.get("Content-Type") or "application/octet-stream"
     session["content-type"] = mt
+    print("[debug]Response Headers::", req_data)
     filesize = req_data.get("Content-Length")
+    print("FileSize:", filesize)
     if filesize is None:  # Web page or a small file probably
         fils = requests.get(
             url, headers={"User-Agent": ua, "Referer": ref}, stream=True
@@ -244,7 +243,6 @@ def proxy_download():
 @app.route("/proxy/f/")
 def send_files():
     print("*************\n", request.headers, "*************\n")
-    print(session["filesize"])
     url = unquote(request.args.get("u"))
     referer = request.args.get("referer")
     print("Downloading:'" + url[:50] + "...'")
@@ -273,20 +271,28 @@ def checksum_first_5_mb(filename, meth="sha256"):
     return foo.hexdigest()
 
 
+def dict_print(s: dict) -> None:
+    print("{")
+    for k, v in s.items():
+        print("%s:%s" % (k, v))
+    print("}")
+
+
 def threaded_req(url, referer, filename):
     print("filename:", filename)
     if not os.path.isdir(SAVE_DIR):
         os.mkdir(SAVE_DIR)
-    file_location = os.path.join(SAVE_DIR, filename)
     parsed_url = urlparse(url)
-    print("STARTING DOWNLOAD")
+    file_location = os.path.join(SAVE_DIR, filename)
     dl_headers = {**basic_headers, "host": parsed_url.netloc, "referer": referer}
-    print("headers:", dl_headers)
-    opener = urllib.request.build_opener()
-    for k, v in dl_headers.items():
-        opener.addheaders = [(k, v)]
-    urllib.request.install_opener(opener)
-    urllib.request.urlretrieve(url, file_location)
+    print("Downloading with headers:")
+    dict_print(dl_headers)
+    # So apparently you cant set headers in urlretrieve.....brilliant
+    with open(file_location, "wb") as f:
+        with requests.get(url, headers=dl_headers, stream=True) as r:
+            for chunk in r.iter_content(chunk_size=(5 * 1024 * 1024)):
+                if chunk:
+                    f.write(chunk)
     print("Downloaded File")
 
 
@@ -429,7 +435,6 @@ def search_json():
     else:
         trending = True
         req = "http://youtube.com/feed/trending/"
-    print(req)
     htm = requests.get(req, headers=basic_headers).text
     return Response(
         json.dumps({"html": htm, "trending": trending}), content_type="application/json"

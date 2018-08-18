@@ -11,9 +11,20 @@ var next_req = true;
     xhr.open("GET", "/proxy/f/?u=" + encodeURIComponent(window.dlurl) + "&referer=" + encodeURIComponent(window.dlref));
     xhr.send();
     xhr.onload = function () {
+        window.dl_start = performance.now();
         setTimeout(check_download, 1000)
     }
-})()
+})();
+var analyse_perf = function (b, c) {
+    var d = document.getElementById("analysed-data"),
+        e = document.getElementById("dl_time"),
+        f = document.getElementById("dl_speed"),
+        a = (c / 1E3).toFixed(2),
+        g = (b / 1048576 / a).toFixed(2);
+    e.innerHTML = a;
+    f.innerHTML = g;
+    d.style.display = "block"
+};
 const check_download = () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "/session/_/progress-poll/", true);
@@ -28,11 +39,14 @@ const check_download = () => {
             next_req = false;
             document.getElementById('till-done').innerHTML = "100";
             document.getElementById("progressbtn").style.width = "100%";
+            window.dl_end = performance.now() - window.dl_start;
+            analyse_perf(data.total, window.dl_end)
 
         }
         const done = parseInt(data.done);
         const total = parseInt(data.total);
-        const perc = ((done / total) * 100).toFixed(2);
+        var _perc = ((done / total) * 100).toFixed(2);
+        const perc = _perc <= 100 ? _perc : 100;
         document.getElementById('till-done').innerHTML = perc;
         document.getElementById("total-size-int").innerHTML = (total / (1024 * 1024)).toFixed(2);
         document.getElementById("progressbtn").style.display = 'block';
