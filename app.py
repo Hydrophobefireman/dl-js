@@ -12,7 +12,7 @@ import time
 import urllib.request
 import uuid
 from urllib.parse import quote, unquote, urlencode, urlparse
-
+from flask_sockets import Sockets
 import requests
 from flask import (
     Flask,
@@ -34,6 +34,7 @@ import yt_sig
 
 api = apIo.Api()
 app = Flask(__name__)
+sockets = Sockets(app)
 ProxyFix(app)
 ua = "Mozilla/5.0 (Windows; U; Windows NT 10.0; en-US)\
  AppleWebKit/604.1.38 (KHTML, like Gecko) Chrome/68.0.3325.162"
@@ -289,11 +290,40 @@ def threaded_req(url, referer, filename):
     dict_print(dl_headers)
     # So apparently you cant set headers in urlretrieve.....brilliant
     with open(file_location, "wb") as f:
-        with requests.get(url, headers=dl_headers, stream=True) as r:
+        with requests.Session().get(url, headers=dl_headers, stream=True) as r:
             for chunk in r.iter_content(chunk_size=(5 * 1024 * 1024)):
                 if chunk:
                     f.write(chunk)
     print("Downloaded File")
+
+
+@sockets.route("/session/sockets/")
+def send_dl_status(ws):
+    while not ws.closed:
+        ws.receive()
+        filename = session.get("filename")
+        filesize = session.get("filesize")
+        if filename is None or filesize is None:
+            ws.send(json.dumps({"error": "no-being-downloaded"}))
+        filesize = int(filesize)
+        file_location = os.path.join(SAVE_DIR, filename)
+        try:
+            curr_size = os.path.getsize(file_location)
+        except:
+            ws.send(json.dumps({"error": "file-deleted-from our-storages"}))
+        if curr_size >= filesize:
+            session.pop("filename")
+            session.pop("filesize")
+            dl_url = "/get-cached/x/?" + urlencode(
+                {"f": quote(filename), "hash": checksum_first_5_mb(file_location)}
+            )
+            ws.send(
+                json.dumps(
+                    {"file": True, "link": dl_url, "done": curr_size, "total": filesize}
+                )
+            )
+        else:
+            ws.send(json.dumps({"done": curr_size, "total": filesize}))
 
 
 @app.route("/session/_/progress-poll/")
@@ -442,4 +472,8 @@ def search_json():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    from gevent import pywsgi
+    from geventwebsocket.handler import WebSocketHandler
+
+    server = pywsgi.WSGIServer(("", 5000), app, handler_class=WebSocketHandler)
+    server.serve_forever()

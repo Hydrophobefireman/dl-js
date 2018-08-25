@@ -1,20 +1,530 @@
-var parser=new DOMParser;function unpack(a){eval("with(env) {"+a+"}");return a=(a+"").replace(/;/g,";\n").replace(/{/g,"\n{\n").replace(/}/g,"\n}\n").replace(/\n;\n/g,";\n").replace(/\n\n/g,"\n")}function og_search(a,c){var b=a.querySelector("meta[property='og:"+c+"']")||a.querySelector("meta[name='og:"+c+"']")||a.querySelector("meta[itemprop='og:"+c+"']");return b?b.getAttribute("content"):b}function decodehtml(a){var c=document.createElement("textarea");c.innerHTML=a;return c.value}
-function get_yt_id(a){a=new URL(a);return 0==a.search.length?a.pathname.substring(1):parseqs(a.search).v}function vidzi(a,c){var b={};b.base_url=c;b.video_urls=[];b.thumbnail="http://null";funcre=/eval\(function\(p[\s\S]*?\)\)\)/;a=parser.parseFromString(a,"text/html");evald=unpack(funcre.exec(a.body.innerHTML)[0]);b.title=a.title;mp4re=/file:"(http.*?mp4)"/;url=mp4re.exec(evald)[1];b.video_urls.push({url:url,quality:"highest"});return b}
-function megadrive(a,c){var b={};b.base_url=c;a=parser.parseFromString(a,"text/html");b.title=og_search(a,"title");b.thumbnail=og_search(a,"image");reg=/mp4:["']([\s\S]*?)['"],/;b.video_urls=[];b.video_urls.push({url:reg.exec(a.body.innerHTML),quality:"Default"});return b}
-function instagram(a,c){var b={};b.base_url=c;b.video_urls=[];a=parser.parseFromString(a,"text/html");b.title=a.title;b.thumbnail=og_search(a,"image");video=a.querySelector("meta[property='og:video']");null==video?b.image__=b.thumbnail:b.video_urls.push({url:video.getAttribute("content"),quality:"default"});return b}
-function streamango(a,c){var b=new RegExp(/eval\(function\(p[\s\S]*?var\s*?srces=[\s\S]*?}\);/),d={video_urls:[]};a=parser.parseFromString(a,"text/html");script_=b.exec(a.body.innerHTML)[0];eval(script_);d.title=og_search(a,"title");d.thumbnail=og_search(a,"image");d.base_url=c;for(var e in srces)ret=srces[e],url=ret.src,-1==url.indexOf("http")&&(url="https:"+url),q=ret.height,d.video_urls.push({url:url,quality:q});return d}function rapidvideo(a,c){return estream(a,c)}
-function watcheng(a,c){var b={video_urls:[]};a=parser.parseFromString(a,"text/html");b.title=a.title;b.thumbnail=a.getElementsByTagName("video")[0].getAttribute("poster");b.base_url=c;sources=a.getElementsByTagName("source")[0];b.video_urls.push({url:sources.src,quality:"default"});return b}
-function estream(a,c){var b={video_urls:[]};a=parser.parseFromString(a,"text/html");b.title=a.title;thumbnail=og_search(a,"image");b.thumbnail=thumbnail||"//null";b.base_url=c;sources=a.getElementsByTagName("source");for(var d=0;d<sources.length;d++)el=sources[d],-1==el.getAttribute("src").indexOf("m3u8")&&b.video_urls.push({url:el.getAttribute("src"),quality:el.getAttribute("res")||el.getAttribute("label")||el.getAttribute("data-res")});return b}
-function yourupload(a,c){var b={video_urls:[]};a=parser.parseFromString(a,"text/html");re=/file:\s'(.*?mp4)(?=',)/;url=re.exec(a.body.innerHTML)[1];b.video_urls.push({url:url,quality:"Highest"});b.base_url=c;b.thumbnail=og_search(a,"image");b.title=og_search(a,"title")||a.title;return b}
-function youtube(a,c){var b=document.getElementById("btn-mp3");b.style.display="block";var d={youtube:!0};d.base_url=c;a=parser.parseFromString(a,"text/html");re=new RegExp(/ytplayer.config\s=\s(.*?)(?=;ytplayer.)/,"m");try{var e=re.exec(a.body.innerHTML)[1];js=JSON.parse(e)}catch(h){document.getElementById("errs").innerHTML="An Unknown Error occured",document.getElementById("errs").style.color="red",console.log(h),window.location="//dl-py.herokuapp.com/video?url="+encodeURIComponent(c),alert("Age Restricted Video Detected.using python parser")}e=
-"https://www.youtube.com"+js.assets.js;var f="https://i.ytimg.com/vi/"+js.args.video_id+"/hqdefault.jpg"||js.args.thumbnail_url;d.title=js.args.title;d.basejs=e;d.thumbnail=f;d.video_urls=[];urls=js.args.url_encoded_fmt_stream_map.split(",");audio_urls=js.args.adaptive_fmts;d.ytaudio=!0;if(void 0==audio_urls)b.innerHTML="No audio url found for this video",d.ytaudio=!1;else{audio_urls=audio_urls.split(",");b.innerHTML="Click here for mp3 version of this video";for(b=0;b<audio_urls.length;b++)if(qs=
-parseqs(audio_urls[b]),-1<qs.url.indexOf("audio")){audio_url=decodeURIComponent(qs.url);var g=qs.s}d.audio_url=[];d.audio_url.push({url:audio_url,sig_:g})}if(null!=parseqs(urls[0]).s)console.log("Fetch Signature Functions"),youtube_signatures(urls,d,d.basejs);else{for(b=0;b<urls.length;b++)qs=parseqs(urls[b]),-1<qs.url.indexOf("ratebypass")&&d.video_urls.push({url:decodeURIComponent(qs.url),quality:qs.quality});return d}}
-function youtube_signatures(a,c,b){var d=new XMLHttpRequest;console.log(c);d.open("GET","/youtube/js/?url="+encodeURIComponent(b),!0);d.onload=function(){if(200===d.status){ret=JSON.parse(d.response);var e=document.createTextNode(ret.sig_js),f=ret.funcname,g=document.createElement("script");g.appendChild(e);document.body.appendChild(g);for(e=0;e<a.length;e++)qs=parseqs(a[e]),-1<qs.url.indexOf("ratebypass")&&(sig=qs.s,console.log(sig),new_sig=window[f](sig),b=decodeURIComponent(qs.url)+"&signature="+
-new_sig,c.video_urls.push({url:b,quality:qs.quality}));sig=window[f](c.audio_url[0].sig_);console.log(sig);c.audio_url[0].url+="&signature="+sig;start_create_video(c)}};d.send()}function offer_proxy(){for(var a=document.getElementsByClassName("proxy_403"),c=0;c<a.length;c++)a[c].style.display="block"}
-function get_videos(a){var c=new Request("/videos/fetch/",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"url="+encodeURIComponent(a)});fetch(c).then(function(a){return a.json()}).then(function(b){if(b.hasOwnProperty("error"))document.getElementById("errs").innerHTML=b.error;else if(b.hasOwnProperty("redirect"))document.getElementById("errs").innerHTML="Redirecting to server extractor",window.location=b.redirect;else{page=b.html;funcname=b.funcname;a=b.landing_url;
-try{data=window[funcname](page,a)}catch(d){throw document.getElementById("errs").innerHTML="An Unknown Error Occured",d;}console.log(data);"undefined"!=typeof data&&start_create_video(data)}})}function parseqs(a){var c={};a="?"==a[0]?a.substring(1):a;a=decodeURI(a);a=a.split("&");for(var b=0;b<a.length;b++){var d=a[b].split("=");c[d[0]]=d[1]}return c}
-function create_video(a){var c=document.getElementById("videos");if(a.image__)document.body.innerHTML="<img src="+a.image__+">",c=document.createElement("div"),c.innerHTML=a.title,document.body.appendChild(c);else{a.youtube&&a.ytaudio&&(document.getElementById("btn-mp3url").href="/mp3extract/?mp3u="+encodeURIComponent(a.audio_url[0].url));json_data=a;document.title=json_data.title;document.getElementById("title").innerHTML=json_data.title;0==json_data.video_urls.length&&(document.getElementById("errs").innerHTML=
-"No Playable Video Found..please Check if the video exists");for(a=0;a<json_data.video_urls.length;a++){var b=document.createElement("div");b.innerText=decodehtml(json_data.title);var d=document.createElement("div");d.innerText="Quality:"+json_data.video_urls[a].quality;b.style.fontWeight="bold";b.style.marginTop="10px";b.appendChild(d);d=document.createElement("video");var e=document.createElement("source"),f=decodehtml(json_data.video_urls[a].url);e.src=f;e.type="video/mp4";e.onerror=function(){offer_proxy()};
-d.poster=json_data.thumbnail;d.controls="True";d.height="225";d.width="400";d.setAttribute("class","vid");d.preload="none";d.appendChild(e);e=document.createElement("div");var g=document.createElement("a");g.href=f;var h=document.createElement("button");h.setAttribute("class","proxy_403");h.style.display="none";h.innerHTML="View this video";h.onclick=function(){window.location="/fetch_url/?u="+encodeURIComponent(f)+"&referer="+encodeURIComponent(json_data.base_url)};g.innerText="Direct Link to Video File";
-e.appendChild(g);c.appendChild(d);c.appendChild(h);c.appendChild(b);c.appendChild(document.createElement("br"));c.appendChild(e)}hpg=document.createElement("a");hpg.href="/";hpg.innerHTML="Homepage";a=document.createElement("div");a.appendChild(hpg);c.appendChild(a);document.getElementById("skelly").style.display="none";document.getElementById("dlfail").style.display="block"}}
-function start_create_video(a){try{create_video(a)}catch(c){document.getElementById("errs").innerHTML="An Unknown Error occured",document.getElementById("errs").style.color="red",console.log(c)}};
+var vidzi, megadrive, openload, instagram, streamango, watcheng, estream, yourupload, youtube, youtube_signatures, offer_proxy, get_videos, create_video, start_create_video, DOMParser;
+let parser, unpack, og_search, parseqs, decodehtml;
+(function () {
+    var _$0 = this;
+
+    var _F = function (page, base_url) {
+        var data = {};
+        data.base_url = base_url;
+        data.video_urls = [];
+        data.thumbnail = 'http://null';
+        funcre = /eval\(function\(p[\s\S]*?\)\)\)/;
+        page = parser.parseFromString(page, 'text/html');
+        evald = unpack(funcre.exec(page.body.innerHTML)[0]);
+        data.title = page.title;
+        mp4re = /file:"(http.*?mp4)"/;
+        url = mp4re.exec(evald)[1];
+        data.video_urls.push({
+            "url": url,
+            "quality": "highest"
+        });
+        return data;
+    };
+
+    var _G = function (page, base_url) {
+        var data = {};
+        data.base_url = base_url;
+        page = parser.parseFromString(page, 'text/html');
+        data.title = og_search(page, 'title');
+        data.thumbnail = og_search(page, 'image');
+        reg = /mp4:["']([\s\S]*?)['"],/;
+        data.video_urls = [];
+        data.video_urls.push({
+            "url": reg.exec(page.body.innerHTML),
+            "quality": "Default"
+        });
+        return data;
+    };
+
+    var _H = function (_page, base_url) {
+        console.log('Openload');
+        var sandbox = {
+            window: {
+                location: function (e) {
+                    return;
+                }
+            },
+            location: function (e) {
+                return;
+            }
+        };
+        page = parser.parseFromString(_page, 'text/html');
+        var div = document.createElement('div');
+        div.id = 'OpenloadID';
+        div.style.display = 'none';
+        div.innerHTML = page.body.innerHTML;
+        with(sandbox) {
+            document.body.appendChild(div);
+            document.body.style.backgroundColor = '#fff';
+            var p = document.getElementById('DtsBlkVFQx') || [...document.querySelectorAll("p")].filter(a => a.textContent.includes("640K"))[0] || document.getElementsByTagName("p")[1]; //document.body.style.visibility = 'hidden';
+
+            var scripts = page.scripts;
+            eval(scripts[scripts.length - 1].innerHTML);
+        }
+        var url = p;
+        var final_reg = new RegExp(/>[\s\S]([\w-]+~\d{10,}~\d+\.\d+\.0\.0~[\w-]+)[\s\S]</);
+        var bruh = document.getElementById('openload-why');
+        bruh.style.display = 'block';
+
+        bruh.onclick = function () {
+            data = {};
+            data.base_url = base_url;
+
+            if (url) {
+                data.video_urls = [{
+                    "url": "https://openload.co/stream/" + url.innerHTML + '?mime=true',
+                    "quality": "Default"
+                }];
+            } else {
+                console.warn("Using Regex..");
+                url = final_reg.exec(div.innerHTML).replace("<", '').replace(">", '');
+                data.video_urls = [{
+                    "url": "https://openload.co/stream/" + url + '?mime=true',
+                    "quality": "Default"
+                }];
+                document.body.removeChild(div);
+            }
+
+            data.title = 'Video';
+            data.thumbnail = document.getElementsByTagName('video')[0].poster;
+            console.log(data);
+            start_create_video(data);
+        };
+
+        return undefined;
+    };
+
+    var _I = function (page, base_url) {
+        const data = {};
+        data.base_url = base_url;
+        data.video_urls = [];
+        page = parser.parseFromString(page, 'text/html');
+        data.title = page.title;
+        data.thumbnail = og_search(page, 'image');
+        video = page.querySelector("meta[property='og:video']");
+
+        if (video == null) {
+            data.image__ = data.thumbnail;
+            return data;
+        } else {
+            data.video_urls.push({
+                "url": video.getAttribute("content"),
+                "quality": "default"
+            });
+        }
+
+        return data;
+    };
+
+    var _J = function (page, base_url) {
+        const re = new RegExp(/eval\(function\(p[\s\S]*?var\s*?srces=[\s\S]*?}\);/);
+        const data = {};
+        data.video_urls = [];
+        page = parser.parseFromString(page, 'text/html');
+        script_ = re.exec(page.body.innerHTML)[0];
+        eval(script_);
+        data.title = og_search(page, 'title');
+        data.thumbnail = og_search(page, 'image');
+        data.base_url = base_url;
+
+        for (const t in srces) {
+            ret = srces[t];
+            url = ret.src;
+
+            if (!url.includes("http")) {
+                url = "https:" + url;
+            }
+
+            q = ret.height;
+            data.video_urls.push({
+                "url": url,
+                "quality": q
+            });
+        }
+
+        return data;
+    };
+
+    var _K = function (page, base_url) {
+        const data = {};
+        data.video_urls = [];
+        page = parser.parseFromString(page, 'text/html');
+        data.title = page.title;
+        data.thumbnail = page.getElementsByTagName("video")[0].getAttribute("poster");
+        data.base_url = base_url;
+        sources = page.getElementsByTagName("source")[0];
+        data.video_urls.push({
+            "url": sources.src,
+            "quality": "default"
+        });
+        return data;
+    };
+
+    var _L = function (page, base_url) {
+        const data = {};
+        data.video_urls = [];
+        page = parser.parseFromString(page, 'text/html');
+        data.title = page.title;
+        thumbnail = og_search(page, "image");
+        data.thumbnail = thumbnail || "//null";
+        data.base_url = base_url;
+        sources = page.getElementsByTagName("source");
+
+        for (let i = 0; i < sources.length; i++) {
+            el = sources[i];
+
+            if (!el.getAttribute("src").includes("m3u8")) {
+                data.video_urls.push({
+                    "url": el.getAttribute("src"),
+                    "quality": el.getAttribute("res") || el.getAttribute("label") || el.getAttribute("data-res")
+                });
+            }
+        }
+
+        return data;
+    };
+
+    var _M = function (page, base_url) {
+        const data = {};
+        data.video_urls = [];
+        page = parser.parseFromString(page, 'text/html');
+        re = /file:\s'(.*?mp4)(?=\',)/;
+        url = re.exec(page.body.innerHTML)[1];
+        data.video_urls.push({
+            "url": url,
+            "quality": "Highest"
+        });
+        data.base_url = base_url;
+        data.thumbnail = og_search(page, 'image');
+        data.title = og_search(page, 'title') || page.title;
+        return data;
+    };
+
+    var _N = function (page, url) {
+        var mp3_ = document.getElementById("btn-mp3");
+        mp3_.style.display = 'block';
+        var data = {};
+        data.youtube = true;
+        data.base_url = url;
+        page = parser.parseFromString(page, 'text/html');
+        re = new RegExp(/ytplayer.config\s=\s(.*?)(?=;ytplayer.)/, 'm');
+
+        try {
+            var tmp = re.exec(page.body.innerHTML)[1];
+            js = JSON.parse(tmp);
+        } catch (e) {
+            document.getElementById("errs").innerHTML = 'An Unknown Error occured';
+            document.getElementById("errs").style.color = 'red';
+            console.log(e);
+            window.location = '//dl-py.herokuapp.com/video?url=' + encodeURIComponent(url); //not gonna send a basejs,embed page and get_video_info file  to the user 
+
+            alert("Age Restricted Video Detected.using python parser");
+        }
+
+        var title = js.args.title;
+        var basejs = "https://www.youtube.com" + js.assets.js;
+        var thumbnail = "https://i.ytimg.com/vi/" + js.args.video_id + "/hqdefault.jpg" || js.args.thumbnail_url;
+        data.title = title;
+        data.basejs = basejs;
+        data.thumbnail = thumbnail;
+        data.video_urls = [];
+        urls = js.args.url_encoded_fmt_stream_map.split(",");
+        audio_urls = js.args.adaptive_fmts;
+        var highest = 0;
+        data.ytaudio = true;
+
+        if (audio_urls == undefined) {
+            mp3_.innerHTML = "No audio url found for this video";
+            data.ytaudio = false;
+        } else {
+            audio_urls = audio_urls.split(",");
+            var signature_audio;
+            mp3_.innerHTML = "Click here for mp3 version of this video";
+
+            for (var i = 0; i < audio_urls.length; i++) {
+                qs = parseqs(audio_urls[i]);
+
+                if (qs.url.indexOf("audio") > -1) {
+                    if (qs.bitrate > highest);
+                    highest = qs.bitrate;
+                    audio_url = decodeURIComponent(qs.url);
+                    signature_audio = qs.s;
+                }
+            }
+
+            data.audio_url = [];
+            data.audio_url.push({
+                "url": audio_url,
+                "sig_": signature_audio
+            });
+        }
+
+        if (parseqs(urls[0]).s != null) {
+            console.log("Fetch Signature Functions");
+            youtube_signatures(urls, data, data.basejs);
+            return undefined;
+        } else {
+            for (var i = 0; i < urls.length; i++) {
+                qs = parseqs(urls[i]);
+
+                if (qs.url.indexOf("ratebypass") > -1) {
+                    data.video_urls.push({
+                        "url": decodeURIComponent(qs.url),
+                        "quality": qs.quality
+                    });
+                }
+            }
+
+            return data;
+        }
+    };
+
+    var _O = function (urls, data, url) {
+        var xhr = new XMLHttpRequest();
+        console.log(data);
+        xhr.open('GET', "/youtube/js/?url=" + encodeURIComponent(url), true);
+
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                ret = JSON.parse(xhr.response);
+                var sig_js = document.createTextNode(ret.sig_js);
+                var func_name = ret.funcname;
+                var scrpt = document.createElement("script");
+                scrpt.appendChild(sig_js);
+                document.body.appendChild(scrpt);
+
+                for (var i = 0; i < urls.length; i++) {
+                    qs = parseqs(urls[i]);
+
+                    if (qs.url.indexOf("ratebypass") > -1) {
+                        sig = qs.s;
+                        console.log(sig);
+                        new_sig = window[func_name](sig);
+                        url = decodeURIComponent(qs.url) + "&signature=" + new_sig;
+                        data.video_urls.push({
+                            "url": url,
+                            "quality": qs.quality
+                        });
+                    }
+                }
+
+                sig = window[func_name](data.audio_url[0].sig_);
+                console.log(sig);
+                data.audio_url[0].url += "&signature=" + sig;
+                start_create_video(data);
+            }
+        };
+
+        xhr.send();
+    };
+
+    var _P = function () {
+        const els_ = document.getElementsByClassName("proxy_403");
+
+        for (let er = 0; er < els_.length; er++) {
+            els_[er].style.display = "block";
+        }
+    };
+
+    var _Q = function (url) {
+        var req = new Request("/videos/fetch/", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: "url=" + encodeURIComponent(url)
+        });
+        fetch(req).then(ret => ret.json()).then(res => {
+            if (res.hasOwnProperty("error")) {
+                document.getElementById("errs").innerHTML = res.error;
+                return undefined;
+            }
+
+            if (res.hasOwnProperty("redirect")) {
+                document.getElementById("errs").innerHTML = "Redirecting to server extractor";
+                window.location = res.redirect;
+                return;
+            }
+
+            page = res.html;
+            funcname = res.funcname;
+            url = res.landing_url;
+
+            try {
+                data = window[funcname](page, url);
+            } catch (e) {
+                console.error(e);
+                document.getElementById("errs").innerHTML = "An Unknown Error Occured";
+                throw e;
+            }
+
+            console.log(data);
+
+            if (typeof data != 'undefined') {
+                /* to prevent errors with async youtube signature decryption 
+                                for other websites.it shouldn't matter */
+                start_create_video(data);
+            }
+        });
+    };
+
+    var _R = function (data) {
+        var div_ = document.getElementById("videos");
+
+        if (data.image__) {
+            document.body.innerHTML = "<img src=" + data.image__ + ">";
+            var b = document.createElement("div");
+            b.innerHTML = data.title;
+            document.body.appendChild(b);
+            return undefined;
+        }
+
+        if (data.youtube && data.ytaudio) {
+            document.getElementById("btn-mp3url").href = "/mp3extract/?mp3u=" + encodeURIComponent(data.audio_url[0].url);
+        }
+
+        json_data = data;
+        document.title = json_data.title;
+        document.getElementById("title").innerHTML = json_data.title;
+
+        if (json_data.video_urls.length == 0) {
+            document.getElementById("errs").innerHTML = "No Playable Video Found..please Check if the video exists";
+        }
+
+        for (var i = 0; i < json_data.video_urls.length; i++) {
+            var h3 = document.createElement("div");
+            h3.innerText = decodehtml(json_data.title);
+            var h5 = document.createElement("div");
+            h5.innerText = "Quality:" + json_data.video_urls[i].quality;
+            h3.style.fontWeight = "bold";
+            h3.style.marginTop = "10px";
+            h3.appendChild(h5);
+            var v = document.createElement("video");
+            var source = document.createElement("source");
+            var url = decodehtml(json_data.video_urls[i].url);
+            source.src = url;
+            source.type = 'video/mp4';
+
+            source.onerror = function () {
+                offer_proxy();
+            };
+
+            v.poster = json_data.thumbnail;
+            v.controls = 'True';
+            v.height = '225';
+            v.width = '400';
+            v.setAttribute("class", 'vid');
+            v.preload = 'none';
+            v.appendChild(source);
+            var a1 = document.createElement("div");
+            var a2 = document.createElement("a");
+            a2.href = url;
+            var proxy_ = document.createElement("button");
+            proxy_.setAttribute("class", "proxy_403");
+            proxy_.style.display = "none";
+            proxy_.innerHTML = "View this video";
+
+            proxy_.onclick = function () {
+                window.location = "/fetch_url/?u=" + encodeURIComponent(url) + "&referer=" + encodeURIComponent(json_data.base_url);
+            };
+
+            a2.innerText = "Direct Link to Video File";
+            a1.appendChild(a2);
+            div_.appendChild(v);
+            div_.appendChild(proxy_);
+            div_.appendChild(h3);
+            div_.appendChild(document.createElement("br"));
+            div_.appendChild(a1);
+        }
+
+        hpg = document.createElement("a");
+        hpg.href = "/";
+        hpg.innerHTML = "Homepage";
+        var prnt = document.createElement("div");
+        prnt.appendChild(hpg);
+        div_.appendChild(prnt);
+        document.getElementById("skelly").style.display = 'none';
+        document.getElementById("dlfail").style.display = 'block';
+    };
+
+    var _S = function (data) {
+        try {
+            create_video(data);
+        } catch (e) {
+            document.getElementById("errs").innerHTML = 'An Unknown Error occured';
+            document.getElementById("errs").style.color = 'red';
+            console.log(e);
+        }
+    };
+
+
+    var __constructor = function () {};
+
+    _$0.vidzi = _F;
+    _$0.megadrive = _G;
+    _$0.openload = _H;
+    _$0.instagram = _I;
+    _$0.streamango = _J;
+    _$0.watcheng = _K;
+    _$0.estream = _L;
+    _$0.yourupload = _M;
+    _$0.youtube = _N;
+    _$0.youtube_signatures = _O;
+    _$0.offer_proxy = _P;
+    _$0.get_videos = _Q;
+    _$0.create_video = _R;
+    _$0.start_create_video = _S;
+    parser = new DOMParser;
+
+    var _W = code => {
+        const env = {
+            eval(c) {
+                code = c;
+            },
+
+            window: {},
+            document: {}
+        };
+        eval("with(env) {" + code + "}");
+        code = ("" + code).replace(/;/g, ";\n").replace(/{/g, "\n{\n").replace(/}/g, "\n}\n").replace(/\n;\n/g, ";\n").replace(/\n\n/g, "\n");
+        return code;
+    };
+
+    unpack = _W;
+
+    var _X = (page, what) => {
+        var resp = page.querySelector("meta[property='og:" + what + "']") || page.querySelector("meta[name='og:" + what + "']") || page.querySelector("meta[itemprop='og:" + what + "']");
+
+        if (resp) {
+            return resp.getAttribute("content");
+        }
+
+        return resp;
+    };
+
+    og_search = _X;
+
+    var _Y = query => {
+        const params = {};
+        query = query[0] == '?' ? query.substring(1) : query;
+        query = decodeURI(query);
+        const vars = query.split('&');
+
+        for (let i = 0; i < vars.length; i++) {
+            const pair = vars[i].split('=');
+            params[pair[0]] = decodeURIComponent(pair[1]);
+        }
+
+        return params;
+    };
+
+    parseqs = _Y;
+
+    var _Z = html => {
+        var txt = document.createElement("textarea");
+        txt.innerHTML = html;
+        return txt.value;
+    };
+
+    decodehtml = _Z;
+}).call(this);

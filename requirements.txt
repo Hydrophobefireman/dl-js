@@ -3,3 +3,5 @@ requests==2.18.4
 beautifulsoup4==4.6.0
 django-htmlmin==0.10.0
 gunicorn==19.9.0
+Flask-sockets==0.2.1
+gevent-websocket==0.10.1

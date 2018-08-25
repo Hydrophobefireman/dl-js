@@ -441,17 +441,18 @@ function create_video(data) {
         var a1 = document.createElement("div");
         var a2 = document.createElement("a");
         a2.href = url;
-        var proxy_ = document.createElement("button");
+        var proxy_ = document.createElement("button"),
+            link_a = document.createElement('a');
         proxy_.setAttribute("class", "proxy_403");
+        link_a.className = 'proxy_link';
         proxy_.style.display = "none";
         proxy_.innerHTML = "View this video";
-        proxy_.onclick = function () {
-            window.location = "/fetch_url/?u=" + encodeURIComponent(url) + "&referer=" + encodeURIComponent(json_data.base_url);
-        };
+        link_a.href = "/fetch_url/?u=" + encodeURIComponent(url) + "&referer=" + encodeURIComponent(json_data.base_url);
+        link_a.appendChild(proxy_);
         a2.innerText = "Direct Link to Video File";
         a1.appendChild(a2);
         div_.appendChild(v);
-        div_.appendChild(proxy_);
+        div_.appendChild(link_a);
         div_.appendChild(h3);
         div_.appendChild(document.createElement("br"));
         div_.appendChild(a1);
