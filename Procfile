@@ -1,1 +1,1 @@
-web: bin/start-nginx exec hypercorn app:app -k 5
+web: hypercorn app:app -k 5
