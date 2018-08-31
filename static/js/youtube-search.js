@@ -19,7 +19,7 @@ if (0 != doctitle.length) {
 function search() {
     var q;
     /** @type {string} */
-    var http_url = "/search/?q=" + document.getElementById("search").value;
+    var http_url = "/search?q=" + document.getElementById("search").value;
     /** @type {string} */
     window.location = http_url;
 }
@@ -120,7 +120,7 @@ b.onmouseover = function () {
                     api = null;
                 }
                 /** @type {string} */
-                var requestOrUrl = "/video/?url=" + encodeURIComponent("https://youtu.be/" + id);
+                var requestOrUrl = "/video?url=" + encodeURIComponent("https://youtu.be/" + id);
                 json_data.data.push({
                     url: requestOrUrl,
                     thumb: thumb,
