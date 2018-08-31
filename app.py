@@ -60,7 +60,6 @@ except FileNotFoundError:
 
 @app.before_request
 async def rets():
-    print(vars(request))
     if (
         not request.headers.get("X-Forwarded-Proto", "http") == "https"
         and request.url.startswith("http://")
@@ -76,9 +75,9 @@ async def index():
     return html_minify(await render_template("index.html"))
 
 
-@app.route("/")
+@app.route("/get-cached/x/")
 async def send_file_no_nginx():
-    pass
+    _file=request.args.get("f")
 
 
 @app.route("/video/")
