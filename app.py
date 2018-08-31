@@ -62,7 +62,7 @@ except FileNotFoundError:
 async def rets():
     print(vars(request))
     if (
-        request.headers.get("X-Forwarded-Proto", "http") == "https"
+        not request.headers.get("X-Forwarded-Proto", "http") == "https"
         and request.url.startswith("http://")
         and "127.0.0.1" not in request.url
         and "localhost" not in request.url
