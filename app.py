@@ -1,4 +1,6 @@
+import asyncio
 import base64
+import gzip
 import hashlib
 import html
 import json
@@ -14,8 +16,10 @@ import uuid
 from urllib.parse import quote, unquote, urlencode, urlparse
 
 import requests
-from flask import (
-    Flask,
+from htmlmin.minify import html_minify
+from quart import (
+    Quart,
+    Request,
     Response,
     make_response,
     redirect,
@@ -24,17 +28,18 @@ from flask import (
     send_from_directory,
     session,
     stream_with_context,
+    websocket,
+    flask_patch,
 )
-from htmlmin.minify import html_minify
-from werkzeug.contrib.fixers import ProxyFix
 
 import apIo
+from io import BytesIO
 import streamsites
 import yt_sig
 
 api = apIo.Api()
-app = Flask(__name__)
-ProxyFix(app)
+app = Quart(__name__)
+Response
 ua = "Mozilla/5.0 (Windows; U; Windows NT 10.0; en-US)\
  AppleWebKit/604.1.38 (KHTML, like Gecko) Chrome/68.0.3325.162"
 
@@ -57,40 +62,63 @@ except FileNotFoundError:
 
 
 @app.before_request
-def enforce_https():
+async def rets():
+    request.stimes = time.time()
     if (
-        request.endpoint in app.view_functions
+        not request.headers.get("X-Forwarded-Proto", "http") == "https"
         and request.url.startswith("http://")
-        and not request.is_secure
         and "127.0.0.1" not in request.url
         and "localhost" not in request.url
         and "herokuapp." in request.url
     ):
-        return redirect(request.url.replace("http://", "https://"), code=301)
+        return redirect(request.url.replace("http://", "https://"), status_code=301)
 
 
-@app.route("/", strict_slashes=False)
-def index():
-    return html_minify(render_template("index.html"))
+@app.route("/")
+async def index():
+    return html_minify(await render_template("index.html"))
 
 
-@app.route("/video/", strict_slashes=False)
-def video():
-    url = request.args.get("url")
+@app.route("/get-cached/x/")
+async def send_file_no_nginx():
+    filename = request.args.get("f")
+    print(request.headers)
+    if not os.path.isfile(os.path.join(SAVE_DIR, filename)):
+        return "No File"
+    fsize = os.path.getsize(os.path.join(SAVE_DIR, filename))
+    resp = await make_response(await send_from_directory(SAVE_DIR, filename))
+    resp.headers["Accept-Ranges"] = "bytes"
+    # Request headers are 0- or no header included
+    if (
+        "Content-Range" not in resp.headers
+        or str(resp.headers.get("Content-Range")).lower() == "bytes=0-"
+    ):
+        resp.headers["Content-Range"] = "Bytes=0-%d/%d" % (fsize - 1, fsize)
+    print(resp.headers)
+    return resp,206
+
+
+@app.route("/video/")
+async def video():
+    args = request.args
+    url = args.get("url")
     if url is None:
-        return redirect("/", code=302)
+        return redirect("/", status_code=302)
     data = streamsites.check_for_stream_sites(url, request.headers.get("User-Agent"))
     if data:
         return html_minify(
-            render_template("multioptions.html", urls=data, url=url, number_=len(data))
+            await render_template(
+                "multioptions.html", urls=data, url=url, number_=len(data)
+            )
         )
-    return html_minify(render_template("video.html", url=url))
+    return html_minify(await render_template("video.html", url=url))
 
 
 @app.route("/videos/fetch/", methods=["POST"])
-def get_video():
+async def get_video():
     try:
-        _url = request.form["url"]
+        form = await request.form
+        _url = form.get("url")
         _url = "http://" + _url if not _url.startswith("http") else _url
         url = check_for_redirects(_url)
     except:
@@ -111,11 +139,11 @@ def get_video():
         )
     func_name, url = get_funcname(url)
     if not func_name:
-        response = make_response(json.dumps({"error": "not supported"}))
+        response = await make_response(json.dumps({"error": "not supported"}))
     else:
         page = requests.get(url, headers=basic_headers, allow_redirects=True)
         if not page.ok:
-            response = make_response(
+            response = await make_response(
                 json.dumps(
                     {
                         "error": "URL Returned The error-%s %s"
@@ -124,7 +152,7 @@ def get_video():
                 )
             )
         else:
-            response = make_response(
+            response = await make_response(
                 json.dumps(
                     {"html": page.text, "funcname": func_name, "landing_url": url}
                 )
@@ -133,15 +161,14 @@ def get_video():
     return response
 
 
-@app.route("/mp3extract/", strict_slashes=False)
-def extract_to_mp3():
+@app.route("/mp3extract/")
+async def extract_to_mp3():
     _url = unquote(request.args.get("mp3u"))
-    mt = "audio/mp3"
-    return html_minify(render_template("mp3.html", u=_url, mime=quote(mt)))
+    return html_minify(await render_template("mp3.html", u=_url, mime="audio/mp3"))
 
 
 @app.route("/stream/f/cache/")
-def stream_cache():
+async def stream_cache():
     ua = request.headers.get("User-Agent")
     file_s = unquote(request.args.get("u"))
     sess = requests.Session()
@@ -181,10 +208,10 @@ def proxy_download_before_send(fn, r, dl, fsize, completed):
 
 
 @app.route("/send-cached/*/download/")
-def send_statics_no_range():
+async def send_statics_no_range():
     mp3file = request.args.get("url")
     if os.path.isfile(mp3file):
-        rv = make_response(send_from_directory(app.root_path, mp3file))
+        rv = await make_response(send_from_directory(app.root_path, mp3file))
         rv.headers["Content-Disposition"] = "attachment;filename=%s" % (mp3file)
         return rv
     else:
@@ -192,30 +219,16 @@ def send_statics_no_range():
 
 
 @app.route("/youtube/js/")
-def sig_func_name():
+async def sig_func_name():
     url = request.args["url"]
     sig_js, funcname = yt_sig.main_decrypt().get_js(url)
-    res = make_response(json.dumps({"sig_js": sig_js, "funcname": funcname}))
+    res = await make_response(json.dumps({"sig_js": sig_js, "funcname": funcname}))
     res.headers["Content-Type"] = "application/json"
     return res
 
 
-def check_for_redirects(url):
-    sess = requests.Session()
-    u = sess.head(url, headers=basic_headers, allow_redirects=True)
-    if re.search(r"https?://(www\.)?google\.co.*?\/url", u.url) is not None:
-        url = re.search(
-            r"URL='(?P<url>.*?)'",
-            sess.get(u.url, allow_redirects=True, headers=basic_headers).text,
-            re.IGNORECASE,
-        )
-        return url.group("url")
-    else:
-        return u.url
-
-
 @app.route("/fetch_url/")
-def proxy_download():
+async def proxy_download():
     url = request.args.get("u")
     ref = request.args.get("referer")
     req = requests.Session().head(
@@ -237,11 +250,11 @@ def proxy_download():
             content_type=fils.headers.get("Content-Type"),
         )
     session["filesize"] = filesize
-    return render_template("send_blob.html", url=url, ref=ref)
+    return html_minify(await render_template("send_blob.html", url=url, ref=ref))
 
 
 @app.route("/proxy/f/")
-def send_files():
+async def send_files():
     print("*************\n", request.headers, "*************\n")
     url = unquote(request.args.get("u"))
     referer = request.args.get("referer")
@@ -296,6 +309,167 @@ def threaded_req(url, referer, filename):
     print("Downloaded File")
 
 
+@app.websocket("/session/sockets/")
+async def websock():
+    while True:
+        await websocket.receive()
+        filename = session.get("filename")
+        filesize = session.get("filesize")
+        if filename is None or filesize is None:
+            await websocket.send(json.dumps({"error": "no-being-downloaded"}))
+        filesize = int(filesize)
+        file_location = os.path.join(SAVE_DIR, filename)
+        try:
+            curr_size = os.path.getsize(file_location)
+        except:
+            await websocket.send(
+                json.dumps({"error": "file-deleted-from our-storages"})
+            )
+        if curr_size >= filesize:
+            session.pop("filename")
+            session.pop("filesize")
+            dl_url = "/get-cached/x/?" + urlencode(
+                {"f": quote(filename), "hash": checksum_first_5_mb(file_location)}
+            )
+            await websocket.send(
+                json.dumps(
+                    {"file": True, "link": dl_url, "done": curr_size, "total": filesize}
+                )
+            )
+        else:
+            await websocket.send(json.dumps({"done": curr_size, "total": filesize}))
+
+
+@app.route("/test/proxy/")
+async def proxy_tests():
+    return await render_template("test.html")
+
+
+@app.route("/api/1/youtube/trending")
+async def yt_trending():
+    data = api.youtube(trending=True)
+    res = await make_response(json.dumps(data))
+    res.headers["Content-Type"] = "application/json"
+    return res
+
+
+@app.route("/api/1/youtube/get")
+async def youtube_search_():
+    _query = request.args.get("q")
+    query = html.unescape(_query) if _query else False
+    data = api.youtube(query=query)
+    res = await make_response(json.dumps(data))
+    res.headers["Content-Type"] = "application/json"
+    return res
+
+
+@app.errorhandler(404)
+async def page_error(e):
+    return html_minify(await render_template("404.html")), 404
+
+
+@app.after_request
+async def cors___(res):
+    defaults = [
+        (
+            "COMPRESS_MIMETYPES",
+            [
+                "text/html",
+                "text/css",
+                "text/xml",
+                "application/json",
+                "application/javascript",
+            ],
+        ),
+        ("COMPRESS_LEVEL", 8),
+        ("COMPRESS_MIN_SIZE", 500),
+    ]
+
+    for k, v in defaults:
+        app.config.setdefault(k, v)
+    res.direct_passthrough = False
+    accept_encoding = request.headers.get("Accept-Encoding", "")
+    res.headers["Access-Control-Allow-Origin"] = "https://pycode.tk"
+    res.headers["Access-Control-Allow-Headers"] = "*"
+    """res.headers["X-Perf"] = time.time() - request.stimes
+    vary = res.headers.get("Vary")
+    if vary:
+        if "access-control-allow-origin" not in vary.lower():
+            res.headers[
+                "Vary"
+            ] = "{}, Access-Control-Allow-Origin,Access-Control-Allow-Headers".format(
+                vary
+            )
+    else:
+        res.headers["Vary"] = "Access-Control-Allow-Origin,Access-Control-Allow-Headers"
+    if (
+        res.mimetype not in app.config["COMPRESS_MIMETYPES"]
+        or "gzip" not in accept_encoding.lower()
+        or not 200 <= res.status_code < 300
+        or (
+            res.content_length is not None
+            and res.content_length < app.config["COMPRESS_MIN_SIZE"]
+        )
+        or "Content-Encoding" in res.headers
+    ):
+        return res
+    gzip_content = await compress(app, res)
+    res.set_data(gzip_content)
+    res.headers["content-encoding"] = "gzip"
+    res.headers["content-length"] = res.content_length
+    if vary:
+        if "accept-encoding" not in vary.lower():
+            res.headers["vary"] = "{}, Accept-Encoding".format(vary)
+        else:
+            res.headers["vary"] = "Accept-Encoding"""
+
+    return res
+
+
+async def compress(app, response):
+    gzip_buffer = BytesIO()
+    with gzip.GzipFile(
+        mode="wb", compresslevel=app.config["COMPRESS_LEVEL"], fileobj=gzip_buffer
+    ) as gzip_file:
+        gzip_file.write(await response.get_data())
+        return gzip_buffer.getvalue()
+
+
+@app.route("/api/gen_204/")
+async def wakeup():
+    res = await make_response(b"")
+    res.headers["X-Ready"] = str(uuid.uuid4())
+    res.headers["Access-Control-Expose-Headers"] = "X-Ready"
+    res.headers["Access-Control-Allow-Origin"] = "*"
+    res.headers["Access-Control-Allow-Headers"] = "*"
+    return res, 204
+
+
+@app.route("/search/")
+async def search():
+    q = request.args.get("q")
+    if q is None:
+        q = "  "
+    return html_minify(await render_template("search.html", q=q))
+
+
+@app.route("/search/fetch/", methods=["POST"])
+async def search_json():
+    form = await request.form
+    q = form.get("q")
+    if re.sub(r"\s", "", q):  # has some text
+        trending = False
+        req = "http://youtube.com/results?search_query=" + q
+    else:
+        trending = True
+        req = "http://youtube.com/feed/trending/"
+    htm = requests.get(req, headers=basic_headers).text
+    return Response(
+        json.dumps({"html": htm, "trending": trending}), content_type="application/json"
+    )
+
+
+old = """
 @app.route("/session/_/progress-poll/")
 def progresses():
     filename = session.get("filename")
@@ -319,31 +493,7 @@ def progresses():
         )
     else:
         return json.dumps({"done": curr_size, "total": filesize})
-
-
-@app.route("/test/proxy/")
-def proxy_tests():
-    return render_template("test.html")
-
-
-@app.route("/api/1/youtube/trending")
-def yt_trending():
-    data = api.youtube(trending=True)
-    res = make_response(json.dumps(data))
-    res.headers["Content-Type"] = "application/json"
-    return res
-
-
-@app.route("/api/1/youtube/get")
-def youtube_search_():
-    _query = request.args.get("q")
-    query = html.unescape(_query) if _query else False
-    if not query:
-        return redirect("/youtube")
-    data = api.youtube(query=query)
-    res = make_response(json.dumps(data))
-    res.headers["Content-Type"] = "application/json"
-    return res
+"""
 
 
 def get_funcname(url):
@@ -385,61 +535,19 @@ def get_funcname(url):
         return False, None
 
 
-@app.errorhandler(404)
-def page_error(e):
-    return html_minify(render_template("404.html")), 404
-
-
-@app.after_request
-def cors___(res):
-    res.direct_passthrough = False
-    res.headers["Access-Control-Allow-Origin"] = "https://pycode.tk"
-    res.headers["Access-Control-Allow-Headers"] = "*"
-    vary = res.headers.get("Vary")
-    if vary:
-        if "accept-encoding" not in vary.lower():
-            res.headers[
-                "Vary"
-            ] = "{}, Access-Control-Allow-Origin,Access-Control-Allow-Headers".format(
-                vary
-            )
+def check_for_redirects(url):
+    sess = requests.Session()
+    u = sess.head(url, headers=basic_headers, allow_redirects=True)
+    if re.search(r"https?://(www\.)?google\.co.*?\/url", u.url) is not None:
+        url = re.search(
+            r"URL='(?P<url>.*?)'",
+            sess.get(u.url, allow_redirects=True, headers=basic_headers).text,
+            re.IGNORECASE,
+        )
+        return url.group("url")
     else:
-        res.headers["Vary"] = "Access-Control-Allow-Origin,Access-Control-Allow-Headers"
-    return res
-
-
-@app.route("/api/gen_204/", strict_slashes=False)
-def wakeup():
-    res = make_response()
-    res.headers["X-Ready"] = str(uuid.uuid4())
-    res.headers["Access-Control-Expose-Headers"] = "X-Ready"
-    res.headers["Access-Control-Allow-Origin"] = "*"
-    res.headers["Access-Control-Allow-Headers"] = "*"
-    return res, 204
-
-
-@app.route("/search/", strict_slashes=False)
-def search():
-    q = request.args.get("q")
-    if q is None:
-        q = "  "
-    return html_minify(render_template("search.html", q=q))
-
-
-@app.route("/search/fetch/", methods=["POST"])
-def search_json():
-    q = request.form.get("q")
-    if re.sub(r"\s", "", q):  # has some text
-        trending = False
-        req = "http://youtube.com/results?search_query=" + q
-    else:
-        trending = True
-        req = "http://youtube.com/feed/trending/"
-    htm = requests.get(req, headers=basic_headers).text
-    return Response(
-        json.dumps({"html": htm, "trending": trending}), content_type="application/json"
-    )
+        return u.url
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    app.run(debug=True, host="0.0.0.0", use_reloader=True)
