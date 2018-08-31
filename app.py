@@ -60,11 +60,9 @@ except FileNotFoundError:
 
 @app.before_request
 async def rets():
-    print(request.content_type)
     if (
-        request.endpoint in app.view_functions
+        request.headers.get("X-Forwarded-Proto", "http") == "https"
         and request.url.startswith("http://")
-        and not request.is_secure
         and "127.0.0.1" not in request.url
         and "localhost" not in request.url
         and "herokuapp." in request.url
@@ -480,4 +478,5 @@ def check_for_redirects(url):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    app.run(debug=True, host="0.0.0.0", use_reloader=True)
+
