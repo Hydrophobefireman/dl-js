@@ -77,7 +77,8 @@ async def index():
 
 @app.route("/get-cached/x/")
 async def send_file_no_nginx():
-    _file=request.args.get("f")
+    _file = request.args.get("f")
+    return send_from_directory("saves",_file)
 
 
 @app.route("/video/")
