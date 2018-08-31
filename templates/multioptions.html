@@ -63,7 +63,7 @@
                             btn.innerHTML = extractHostname("{{u}}");
                             div.appendChild(btn);
                             a.appendChild(div)
-                            a.href = "/video?url=" + encodeURIComponent(decodehtml("{{u}}"));
+                            a.href = "/video/?url=" + encodeURIComponent(decodehtml("{{u}}"));
                             document.getElementById('siterows').appendChild(a);
                             a.style.height = "inherit"
                         </script>
