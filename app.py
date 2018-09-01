@@ -218,9 +218,15 @@ def check_for_redirects(url):
 def proxy_download():
     url = request.args.get("u")
     ref = request.args.get("referer")
-    req = requests.Session().head(
-        url, headers={"User-Agent": ua, "Referer": ref}, allow_redirects=True
+    sess = requests.Session()
+    req = sess.get(
+        url,
+        headers={"User-Agent": ua, "Referer": ref},
+        allow_redirects=True,
+        stream=True,
     )
+    for _ in req.iter_content(chunk_size=10):
+        req.close()
     url = req.url
     req_data = req.headers
     mt = req_data.get("Content-Type") or "application/octet-stream"
