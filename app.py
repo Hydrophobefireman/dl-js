@@ -360,6 +360,8 @@ def get_funcname(url):
         is not None
     ):
         return "openload", url
+    if re.search(r"^(https?:)?//.*\.?(keeload)\.", url, re.IGNORECASE) is not None:
+        return "keeload", url
     if re.search(r"^(https?:)?//.*\.?megadrive\.", url, re.IGNORECASE) is not None:
         return "megadrive", url
     if re.search(r"^(https?:)?//.*\.?estream", url, re.IGNORECASE) is not None:
