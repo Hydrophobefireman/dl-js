@@ -79,7 +79,6 @@ async def index():
     return html_minify(await render_template("index.html"))
 
 
-"""
 @app.route("/get-cached/x/")
 async def send_file_no_nginx():
     code = 200
@@ -100,8 +99,6 @@ async def send_file_no_nginx():
         resp.headers["Content-Range"] = "Bytes=0-%d/%d" % (fsize - 1, fsize)
     print(resp.headers)
     return resp, code
-
-"""
 
 
 @app.route("/video/")
@@ -474,9 +471,8 @@ async def search_json():
     )
 
 
-old = """
 @app.route("/session/_/progress-poll/")
-def progresses():
+async def progresses():
     filename = session.get("filename")
     filesize = session.get("filesize")
     if filename is None or filesize is None:
@@ -498,7 +494,6 @@ def progresses():
         )
     else:
         return json.dumps({"done": curr_size, "total": filesize})
-"""
 
 
 def get_funcname(url):
