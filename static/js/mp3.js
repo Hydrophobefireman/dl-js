@@ -12,7 +12,7 @@ invs.addEventListener("click", function () {
 prbr = document.getElementById("dds_pgbr");
 var el = document.getElementById("div_");
 document.body.appendChild(el);
-const evtSource = new EventSource("/stream/f/cache/?u=" + encodeURIComponent(window.dlurl));
+const evtSource = new EventSource("/stream/f/cache?u=" + encodeURIComponent(window.dlurl));
 evtSource.addEventListener("message", function (e) {
     if (e.data.indexOf("/send-cache") > -1) {
         var btn_ = document.getElementById("download_link");
