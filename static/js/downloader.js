@@ -7,13 +7,17 @@ var next_req = true;
     document.getElementById("filename").onclick = () => {
         document.getElementById("name-set").innerHTML = 'change Name'
     }
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "/proxy/f/?u=" + encodeURIComponent(window.dlurl) + "&referer=" + encodeURIComponent(window.dlref));
-    xhr.send();
-    xhr.onload = function () {
+    fetch("/proxy/f/?u=" + encodeURIComponent(window.dlurl) + "&referer=" + encodeURIComponent(window.dlref), {
+        "credentials": "include",
+        "referrer": window.location.href,
+        "referrerPolicy": "no-referrer-when-downgrade",
+        "body": null,
+        "method": "GET",
+        "mode": "cors"
+    }).then(res => res.text()).then(ret => {
         window.dl_start = performance.now();
-        setTimeout(check_download, 1200)
-    }
+        setTimeout(socket, 1200)
+    });
 })();
 var analyse_perf = function (b, c) {
     var d = document.getElementById("analysed-data"),
@@ -25,11 +29,17 @@ var analyse_perf = function (b, c) {
     f.innerHTML = g;
     d.style.display = "block"
 };
-const check_download = () => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", "/session/_/progress-poll/", true);
-    xhr.onload = () => {
-        data = JSON.parse(xhr.response);
+
+
+function socket() {
+    var next_req = true;
+    var websocket_url = ((window.location.protocol === 'https:') ? "wss://" : "ws://") + window.location.host + "/session/sockets/"
+    var ws = new WebSocket(websocket_url);
+    ws.onopen = function () {
+        ws.send("init-message")
+    };
+    ws.onmessage = function (msg) {
+        var data = JSON.parse(msg.data);
         if (data.hasOwnProperty("error")) {
             next_req = false;
         }
@@ -40,7 +50,8 @@ const check_download = () => {
             document.getElementById('till-done').innerHTML = "100";
             document.getElementById("progressbtn").style.width = "100%";
             window.dl_end = performance.now() - window.dl_start;
-            analyse_perf(data.total, window.dl_end)
+            analyse_perf(data.total, window.dl_end);
+            ws.close()
 
         }
         const done = parseInt(data.done);
@@ -51,13 +62,10 @@ const check_download = () => {
         document.getElementById("total-size-int").innerHTML = (total / (1024 * 1024)).toFixed(2);
         document.getElementById("progressbtn").style.display = 'block';
         document.getElementById("progressbtn").style.width = perc + "%";
-
-    }
-    xhr.onerror = () => {
-        next_req = false;
-    }
-    if (next_req) {
-        xhr.send();
-        setTimeout(check_download, 3000);
+        if (next_req) {
+            setTimeout(function () {
+                ws.send("status")
+            }, 2000)
+        }
     }
 }

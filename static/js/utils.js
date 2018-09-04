@@ -1,53 +1,52 @@
 const parser = new DOMParser();
 /*modified 
 http://matthewfl.com/js/unPacker.js */
-var unpack = function unpack(code) {
-    var env = {
-        eval: function _eval(c) {
+const unpack = (code) => {
+    const env = {
+        eval(c) {
             code = c;
         },
-
         window: {},
         document: {}
     };
     eval("with(env) {" + code + "}");
-    code = "" + code;
+    code = ("" + code).replace(/;/g, ";\n").replace(/{/g, "\n{\n").replace(/}/g, "\n}\n").replace(/\n;\n/g, ";\n").replace(/\n\n/g, "\n");
     return code;
-};
-
-function og_search(page, what) {
+}
+const og_search = (page, what) => {
     var resp = page.querySelector("meta[property='og:" + what + "']") || page.querySelector("meta[name='og:" + what + "']") || page.querySelector("meta[itemprop='og:" + what + "']");
     if (resp) {
         return resp.getAttribute("content");
     }
     return resp;
-};
+}
 
-function decodehtml(html) {
+
+const decodehtml = (html) => {
     var txt = document.createElement("textarea");
     txt.innerHTML = html;
     return txt.value;
-};
+}
 
-function get_yt_id(_url) {
+const get_yt_id = (_url) => {
     url = new URL(_url);
     if (url.search.length == 0) {
         return url.pathname.substring(1);
     } else {
         return parseqs(url.search).v;
     }
-};
+}
 
 function vidzi(page, base_url) {
-    var data = {},
-        funcre = /eval\(function\(p[\s\S]*?\)\)\)/,
-        mp4re = /file:"(http.*?mp4)"/;
+    var data = {};
     data.base_url = base_url;
     data.video_urls = [];
     data.thumbnail = 'http://null';
+    funcre = /eval\(function\(p[\s\S]*?\)\)\)/;
     page = parser.parseFromString(page, 'text/html');
-    var evald = unpack(funcre.exec(page.body.innerHTML)[0]);
+    evald = unpack(funcre.exec(page.body.innerHTML)[0]);
     data.title = page.title;
+    mp4re = /file:"(http.*?mp4)"/;
     url = mp4re.exec(evald)[1];
     data.video_urls.push({
         "url": url,
@@ -56,42 +55,13 @@ function vidzi(page, base_url) {
     return data;
 }
 
-
-function keeload(page, base_url) {
-    var re = /(eval\(func[\s\S]*?)<\/script/;
-    var page = parser.parseFromString(page, 'text/html');
-    var script_ = re.exec(page);
-    if (script_) {
-        script_ = script_[1];
-    } else {
-        script_ = page.scripts[page.scripts.length - 1].innerHTML;
-    }
-    var code = unpack(script_),
-        reg = /title:["'](.*?)["'],/g,
-        urlr = /file:["'](.*?)["'],/g,
-        thumb = /image:["'](.*?)["'],/g;
-    var title = reg.exec(code)[1],
-        url = urlr.exec(code)[1],
-        thumbnail = thumb.exec(code)[1];
-    data = {};
-    data.base_url = base_url;
-    data.title = title;
-    data.video_urls = [];
-    data.video_urls.push({
-        "url": url
-    });
-    // window.location = url; /*only supports http..*/
-    data.thumbnail = thumbnail;
-    return data;
-};
-
 function megadrive(page, base_url) {
     var data = {};
     data.base_url = base_url;
     page = parser.parseFromString(page, 'text/html');
     data.title = og_search(page, 'title');
     data.thumbnail = og_search(page, 'image');
-    var reg = /mp4:["']([\s\S]*?)['"],/;
+    reg = /mp4:["']([\s\S]*?)['"],/;
     data.video_urls = [];
     data.video_urls.push({
         "url": reg.exec(page.body.innerHTML),
@@ -203,7 +173,7 @@ function streamango(page, base_url) {
     return data;
 }
 
-function rapidvideo(page, base_url) {
+const rapidvideo = (page, base_url) => {
     return estream(page, base_url);
 }
 
@@ -414,17 +384,18 @@ function get_videos(url) {
         });
 }
 
-function parseqs(query) {
-    var params = {};
-    query = query[0] == '?' ? query.substring(1) : query;
+const parseqs = (query) => {
+    const params = {};
+    query = ((query[0] == '?') ? query.substring(1) : query);
     query = decodeURI(query);
-    var vars = query.split('&');
-    for (var i = 0; i < vars.length; i++) {
-        var pair = vars[i].split('=');
+    const vars = query.split('&');
+    for (let i = 0; i < vars.length; i++) {
+        const pair = vars[i].split('=');
         params[pair[0]] = decodeURIComponent(pair[1]);
     }
     return params;
-};
+}
+
 
 function create_video(data) {
     var div_ = document.getElementById("videos");
