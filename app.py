@@ -11,6 +11,8 @@ import threading
 import time
 import urllib.request
 import uuid
+import asyncio
+import shutil
 from urllib.parse import quote, unquote, urlencode, urlparse
 
 import requests
@@ -229,6 +231,9 @@ def proxy_download():
         req.close()
     url = req.url
     req_data = req.headers
+    session["ranges"] = (
+        True if str(req.headers.get("accept-ranges")).lower() == "bytes" else False
+    )
     mt = req_data.get("Content-Type") or "application/octet-stream"
     session["content-type"] = mt
     print("[debug]Response Headers::", req_data)
@@ -255,8 +260,16 @@ def send_files():
     _filename = secrets.token_urlsafe(15)
     _mime = _mime_types_.get(session.get("content-type")) or ".bin"
     session["filename"] = _filename + _mime
+
     thread = threading.Thread(
-        target=threaded_req, args=(url, referer, session["filename"])
+        target=threaded_req,
+        args=(
+            url,
+            referer,
+            session["filename"],
+            session["ranges"],
+            session["filesize"],
+        ),
     )
     thread.start()
     time.sleep(2)
@@ -284,7 +297,7 @@ def dict_print(s: dict) -> None:
     print("}")
 
 
-def threaded_req(url, referer, filename):
+def threaded_req(url, referer, filename, range, filesize):
     print("filename:", filename)
     if not os.path.isdir(SAVE_DIR):
         os.mkdir(SAVE_DIR)
@@ -294,35 +307,91 @@ def threaded_req(url, referer, filename):
     print("Downloading with headers:")
     dict_print(dl_headers)
     # So apparently you cant set headers in urlretrieve.....brilliant
-    with open(file_location, "wb") as f:
-        with requests.Session().get(url, headers=dl_headers, stream=True) as r:
+    if not range:
+        loop = asyncio.new_event_loop()
+        loop.run_until_complete(start_download(url, dl_headers, file_location))
+    else:
+        ranges = make_range(filesize)
+        for _range in ranges:
+            loop = asyncio.new_event_loop()
+            new_header = {**dl_headers, "range": f"bytes={_range}"}
+            loop.run_until_complete(
+                start_download(url, new_header, file_location, ranges.index(_range))
+            )
+
+
+async def start_download(url, headers, _filename, _index=None):
+    print(f"HEADERS:{headers}")
+    filename = _filename if _index is None else f"{_filename}_{_index}"
+    with open(filename, "wb") as f:
+        with requests.Session().get(url, headers=headers, stream=True) as r:
             for chunk in r.iter_content(chunk_size=(5 * 1024 * 1024)):
                 if chunk:
                     f.write(chunk)
-    print("Downloaded File")
+    print("Downloaded CHUNK")
+
+
+def make_range(_size) -> list:
+    if isinstance(_size, str) and _size.isdigit():
+        size = int(_size)
+    else:
+        if not isinstance(_size, int):
+            return None
+        size = _size
+    _third = (size // 3) - 1
+    return [f"0-{_third}", f"{_third+1}-{2*_third}", f"{(2*_third)+1}-{size-1}"]
+
+
+def get_size(loc, ranges):
+    if not ranges:
+        return os.path.getsize(loc)
+    else:
+        files = [f"{loc}_{s}" for s in range(3)]
+        return sum(os.path.getsize(s) for s in files)
+
+
+def make_final_file(f):
+    start = time.time()
+    files = [f"{f}_{s}" for s in range(3)]
+    with open(os.path.join(SAVE_DIR, f), "wb") as file_dest:
+        for s in files:
+            with open(os.path.join(SAVE_DIR, s), "rb") as file_src:
+                shutil.copyfileobj(file_src, file_dest)
+    return time.time() - start
 
 
 @app.route("/session/_/progress-poll/")
 def progresses():
     filename = session.get("filename")
     filesize = session.get("filesize")
-    if filename is None or filesize is None:
+    ranges = session.get("ranges")
+    if filename is None or filesize is None or ranges is None:
+        print(f"{(filename, filesize, ranges)}LEL")
         return json.dumps({"error": "no-being-downloaded"})
     filesize = int(filesize)
     file_location = os.path.join(SAVE_DIR, filename)
     try:
-        curr_size = os.path.getsize(file_location)
+        curr_size = get_size(file_location, ranges)
+        print(curr_size)
     except:
         return json.dumps({"error": "file-deleted-from our-storages"})
     if curr_size >= filesize:
+        if ranges:
+            merge_time = make_final_file(filename)
+        else:
+            merge_time = "None"
         session.pop("filename")
         session.pop("filesize")
         dl_url = "/get-cached/x/?" + urlencode(
             {"f": quote(filename), "hash": checksum_first_5_mb(file_location)}
         )
-        return json.dumps(
-            {"file": True, "link": dl_url, "done": curr_size, "total": filesize}
+        res = make_response(
+            json.dumps(
+                {"file": True, "link": dl_url, "done": curr_size, "total": filesize}
+            )
         )
+        res.headers["X-Merge-Time"] = merge_time
+        return res
     else:
         return json.dumps({"done": curr_size, "total": filesize})
 
