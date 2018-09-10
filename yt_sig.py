@@ -5,12 +5,13 @@ import requests
 
 DESKTOP_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3526.73 Safari/537.36"
 
-def search_regexes(p:tuple,st:str)->str:
-  for t in p:
-    _=re.search(t,st)
-    if _:
-      return _
-  raise Exception("No Regex Could match the string")
+
+def search_regexes(p: tuple, st: str) -> str:
+    for t in p:
+        _ = re.search(t, st)
+        if _:
+            return _
+    raise Exception("No Regex Could match the string")
 
 
 class decrypt_error(Exception):
@@ -25,13 +26,18 @@ class main_decrypt:
             basejs_url, headers={"User-Agent": DESKTOP_USER_AGENT}
         ).text
         try:
-            self.funcname=search_regexes((r'(["\'])signature\1\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
-             r'\.sig\|\|(?P<sig>[a-zA-Z0-9$]+)\(',
-             r'\.sig\|\|(?P<sig>[a-zA-Z0-9$]+)\(',
-             r'yt\.akamaized\.net/\)\s*\|\|\s*.*?\s*c\s*&&\s*d\.set\([^,]+\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
-             r'\bc\s*&&\s*d\.set\([^,]+\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\('),self.data).group("sig")
-        
-           # self.funcname = re.search(reg, self.data).group("sig")
+            self.funcname = search_regexes(
+                (
+                    r'(["\'])signature\1\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+                    r"\.sig\|\|(?P<sig>[a-zA-Z0-9$]+)\(",
+                    r"\.sig\|\|(?P<sig>[a-zA-Z0-9$]+)\(",
+                    r"yt\.akamaized\.net/\)\s*\|\|\s*.*?\s*c\s*&&\s*d\.set\([^,]+\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(",
+                    r"\bc\s*&&\s*d\.set\([^,]+\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(",
+                ),
+                self.data,
+            ).group("sig")
+
+        # self.funcname = re.search(reg, self.data).group("sig")
         except Exception as e:
             print(e)
             raise decrypt_error("Unable to obtain signature variable from JavaScript")
@@ -80,4 +86,5 @@ class main_decrypt:
                     func2 = re.search(regs, self.data).group()
 
         sig_js = func2 + self.g_func.group()
-        return sig, sig_js, self.funcname
+        return sig_js, self.funcname
+

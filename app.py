@@ -12,7 +12,7 @@ import time
 import urllib.request
 import uuid
 from urllib.parse import quote, unquote, urlencode, urlparse
-
+import file_dl
 import requests
 from flask import (
     Flask,
@@ -231,6 +231,7 @@ def proxy_download():
     req_data = req.headers
     mt = req_data.get("Content-Type") or "application/octet-stream"
     session["content-type"] = mt
+    session["acc-range"] = req_data.get("accept-ranges", "").lower() == "bytes"
     print("[debug]Response Headers::", req_data)
     filesize = req_data.get("Content-Length")
     print("FileSize:", filesize)
@@ -251,12 +252,14 @@ def send_files():
     print("*************\n", request.headers, "*************\n")
     url = unquote(request.args.get("u"))
     referer = request.args.get("referer")
+    acc_range = session["acc-range"]
     print("Downloading:'" + url[:50] + "...'")
     _filename = secrets.token_urlsafe(15)
     _mime = _mime_types_.get(session.get("content-type")) or ".bin"
     session["filename"] = _filename + _mime
     thread = threading.Thread(
-        target=threaded_req, args=(url, referer, session["filename"])
+        target=threaded_req,
+        args=(url, referer, session["filename"], acc_range, session["filesize"]),
     )
     thread.start()
     time.sleep(2)
@@ -284,21 +287,24 @@ def dict_print(s: dict) -> None:
     print("}")
 
 
-def threaded_req(url, referer, filename):
+def threaded_req(url, referer, filename, acc_range, fs):
     print("filename:", filename)
     if not os.path.isdir(SAVE_DIR):
         os.mkdir(SAVE_DIR)
     parsed_url = urlparse(url)
-    file_location = os.path.join(SAVE_DIR, filename)
+    #    file_location = os.path.join(SAVE_DIR, filename)
     dl_headers = {**basic_headers, "host": parsed_url.netloc, "referer": referer}
     print("Downloading with headers:")
     dict_print(dl_headers)
     # So apparently you cant set headers in urlretrieve.....brilliant
-    with open(file_location, "wb") as f:
-        with requests.Session().get(url, headers=dl_headers, stream=True) as r:
-            for chunk in r.iter_content(chunk_size=(5 * 1024 * 1024)):
-                if chunk:
-                    f.write(chunk)
+    file_dl.prepare_req(
+        url,
+        has_headers=True,
+        range=acc_range,
+        filename=filename,
+        filesize=fs,
+        headers=dl_headers,
+    )
     print("Downloaded File")
 
 
@@ -311,7 +317,7 @@ def progresses():
     filesize = int(filesize)
     file_location = os.path.join(SAVE_DIR, filename)
     try:
-        curr_size = os.path.getsize(file_location)
+        curr_size = file_dl.get_size(file_location, session["acc-range"], filesize)
     except:
         return json.dumps({"error": "file-deleted-from our-storages"})
     if curr_size >= filesize:
