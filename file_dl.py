@@ -105,13 +105,13 @@ def start_download(url, headers, _filename, _index=None, filesize=0):
     _rnges = True if _index is not None else False
     _filename_ = _filename if _index is None else f"{_filename}_{_index}"
     filename = os.path.join(SAVE_DIR, _filename_)
+    #print(headers)
     with open(filename, "wb") as f:
         with sess.get(url, headers=headers, stream=True) as r:
             for chunk in r.iter_content(chunk_size=(5 * 1024)):
                 if chunk:
                     f.write(chunk)
                     # print(get_size(_filename, ranges=_rnges, fs=filesize))
-
     print("\nDownloaded CHUNK")
 
 

@@ -1,7 +1,7 @@
 let next_req = true;
 (() => {
-    document.getElementById("name-set").onclick = ({target}) => {
-        target.innerHTML = 'Name Changed';
+    document.getElementById("name-set").onclick = e => {
+        e.target.innerHTML = 'Name Changed';
         document.getElementById("download-link").download = document.getElementById("filename").value;
     }
     document.getElementById("filename").onclick = () => {

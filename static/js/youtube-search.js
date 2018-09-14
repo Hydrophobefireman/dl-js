@@ -1,215 +1,118 @@
-function decodehtml(s) {
-    /** @type {!Element} */
-    const ta = document.createElement("textarea");
-    return ta.innerHTML = s, ta.value;
-}
-const doctitle = decodehtml(decodehtml(document.title));
-if (0 != doctitle.length) {
-    /** @type {string} */
-    const titles = `Results for ${doctitle}`;
-    /** @type {string} */
-    document.title = titles;
-} else {
-    /** @type {string} */
-    document.title = "Results from youtube.com";
-}
-/**
- * @return {undefined}
- */
-function search() {
-    let q;
-    /** @type {string} */
-    const http_url = `/search?q=${document.getElementById("search").value}`;
-    /** @type {string} */
-    window.location = http_url;
-}
-/**
- * @param {!Event} event
- * @return {undefined}
- */
-document.getElementById("search").onkeyup = ({keyCode}) => {
-    if (13 == keyCode) {
-        search();
+function _toConsumableArray(c) {
+    if (Array.isArray(c)) {
+        for (var d = 0, f = Array(c.length); d < c.length; d++) f[d] = c[d];
+        return f
     }
+    return Array.from(c)
+}
+
+function decodehtml(c) {
+    var d = document.createElement("textarea");
+    return d.innerHTML = c, d.value
+}
+var doctitle = decodehtml(decodehtml(document.title));
+if (0 != doctitle.length) {
+    var titles = "Results for " + doctitle;
+    document.title = titles
+} else document.title = "Results from youtube.com";
+
+function search() {
+    var d = "/search?q=" + document.getElementById("search").value;
+    window.location = d
+}
+document.getElementById("search").onkeyup = function (c) {
+    13 == c.keyCode && search()
 };
-/** @type {(Element|null)} */
-const b = document.getElementById("s-button");
-let get_data;
-let extract_data;
-let gen_results;
-b.onmouseover = () => {
-        /** @type {string} */
-        b.style.boxShadow = "3px 3px #d9dce0";
-    }, b.onmouseout = () => {
-        /** @type {string} */
-        b.style.boxShadow = "0px 0px #d9dce0";
-    }, b.ontouchstart = () => {
-        /** @type {string} */
-        b.style.boxShadow = "3px 3px #d9dce0";
-    }, b.ontouchend = () => {
-        /** @type {string} */
-        b.style.boxShadow = "0px 0px #d9dce0";
+var b = document.getElementById("s-button"),
+    get_data, extract_data, gen_results;
+b.onmouseover = function () {
+        b.style.boxShadow = "3px 3px #d9dce0"
+    }, b.onmouseout = function () {
+        b.style.boxShadow = "0px 0px #d9dce0"
+    }, b.ontouchstart = function () {
+        b.style.boxShadow = "3px 3px #d9dce0"
+    }, b.ontouchend = function () {
+        b.style.boxShadow = "0px 0px #d9dce0"
     },
     function () {
-        const self = this;
-        /**
-         * @param {?} keyword
-         * @return {undefined}
-         */
-        const search = keyword => {
-            /** @type {!Request} */
-            const request = new Request("/search/fetch/", {
+        var c = this;
+        c.get_data = function d(h) {
+            var k = new Request("/search/fetch/", {
                 method: "post",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded"
                 },
-                body: `q=${encodeURIComponent(keyword)}`
+                body: "q=" + encodeURIComponent(h)
             });
-            fetch(request).then((rawResp) => {
-                return rawResp.json();
-            }).then((data) => {
-                extract_data(data);
-            }).then(animate_param => {
-                console.log(animate_param);
-            }).catch(snippetText => {
-                /** @type {!Element} */
-                const div = document.createElement("div");
-                /** @type {string} */
-                div.style.color = "red";
-                /** @type {*} */
-                div.innerText = snippetText;
-                document.getElementById("youtubeprev").appendChild(div);
-            });
-        };
-        /**
-         * @param {string} p
-         * @return {undefined}
-         */
-        const render = p => {
-            if (html = p.html, trending = p.trending, console.log(trending), regex = new RegExp(/ytInitialData"]\s=\s({[\s\S]*?});/, "gm"), json_data = {}, json_data.data = [], videos = [], m = regex.exec(html), reg = JSON.parse(m[1]), trending) {
-                const colorNames = reg.contents.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer.contents;
-                for (dat in colorNames) {
-                    let part;
-                    const data = colorNames[dat].itemSectionRenderer.contents[0].shelfRenderer.content;
-                    let tkey;
-                    const cs = data[Object.keys(data)[0]].items;
-                    videos.push(...cs);
+            fetch(k).then(function (l) {
+                return l.json()
+            }).then(function (l) {
+                extract_data(l)
+            }).then(function (l) {
+                console.log(l)
+            }).catch(function (l) {
+                var n = document.createElement("div");
+                n.style.color = "red", n.innerText = l, document.getElementById("youtubeprev").appendChild(n)
+            })
+        }, c.extract_data = function f(h) {
+            if (html = h.html, trending = h.trending, console.log(trending), regex = new RegExp(/ytInitialData"]\s=\s({[\s\S]*?});/, "gm"), json_data = {}, json_data.data = [], videos = [], m = regex.exec(html), reg = JSON.parse(m[1]), trending) {
+                var k = reg.contents.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer.contents;
+                for (dat in k) {
+                    var C, n = k[dat].itemSectionRenderer.contents[0].shelfRenderer.content,
+                        r = n[Object.keys(n)[0]].items;
+                    (C = videos).push.apply(C, _toConsumableArray(r))
                 }
-            } else {
-                for (opts in (contents = reg.contents.twoColumnSearchResultsRenderer.primaryContents.sectionListRenderer.contents[0].itemSectionRenderer.contents, contents)) {
-                    if (null != contents[opts].videoRenderer) {
-                        videos.push(contents[opts]);
-                    }
-                }
-            }
-            for (p in videos) {
-                const extracts = videos[p];
-                /** @type {string} */
-                const j = Object.keys(extracts)[0];
-                const id = extracts[j].videoId;
-                /** @type {string} */
-                const thumb = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-                const title = extracts[j].title.simpleText;
-                const nick = extracts[j].shortBylineText.runs[0].text;
-                /** @type {string} */
-                const channel_url = `//youtube.com${extracts[j].shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url}`;
+            } else
+                for (opts in contents = reg.contents.twoColumnSearchResultsRenderer.primaryContents.sectionListRenderer.contents[0].itemSectionRenderer.contents, contents) null != contents[opts].videoRenderer && videos.push(contents[opts]);
+            for (h in videos) {
+                var t = videos[h],
+                    u = Object.keys(t)[0],
+                    v = t[u].videoId,
+                    x = t[u].title.simpleText,
+                    y = t[u].shortBylineText.runs[0].text,
+                    z = "//youtube.com" + t[u].shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url;
                 try {
-                    var api = extracts[j].richThumbnail.movingThumbnailRenderer.movingThumbnailDetails.thumbnails[0].url;
-                } catch (e) {
-                    /** @type {null} */
-                    api = null;
+                    var A = t[u].richThumbnail.movingThumbnailRenderer.movingThumbnailDetails.thumbnails[0].url
+                } catch (C) {
+                    A = null
                 }
-                /** @type {string} */
-                const requestOrUrl = `/video?url=${encodeURIComponent(`https://youtu.be/${id}`)}`;
+                var B = "/video?url=" + encodeURIComponent("https://youtu.be/" + v);
                 json_data.data.push({
-                    url: requestOrUrl,
-                    thumb,
-                    title,
-                    channel: nick,
-                    channel_url,
-                    preview: api
-                });
+                    url: B,
+                    thumb: "https://i.ytimg.com/vi/" + v + "/hqdefault.jpg",
+                    title: x,
+                    channel: y,
+                    channel_url: z,
+                    preview: A
+                })
             }
-            gen_results(json_data);
-        };
-        /**
-         * @param {!Object} suiteContainer
-         * @return {?}
-         */
-        const init = ({data}) => {
-            /** @type {string} */
-            document.getElementById("skelly").style.display = "none";
-            /** @type {string} */
-            document.getElementById("content").style.display = "block";
-            /** @type {number} */
-            let i = 0;
-            for (; i < data.length; i++) {
-                /** @type {!Element} */
-                const node = document.createElement("a");
-                /** @type {!Element} */
-                const element = document.createElement("img");
-                element.setAttribute("class", "rounded-image");
-                element.src = data[i].thumb;
-                const name = data[i].title;
-                const src = data[i].url;
-                const info = data[i].channel;
-                const uriContent = data[i].channel_url;
-                element.setAttribute("data-motion", data[i].preview);
-                element.setAttribute("data-img", data[i].thumb);
-                element.setAttribute("alt", "No Preview available or your browser does not support webp images");
-                /** @type {string} */
-                element.style.display = "inline-block";
-                node.href = src;
-                node.appendChild(element);
-                node.appendChild(document.createElement("br"));
-                /** @type {!Element} */
-                const nOpt = document.createElement("b");
-                nOpt.innerHTML = name;
-                node.appendChild(nOpt);
-                /** @type {!Element} */
-                const a = document.createElement("a");
-                a.href = uriContent;
-                a.innerHTML = info;
-                /**
-                 * @return {undefined}
-                 */
-                element.onmouseover = function () {
-                    this.src = this.getAttribute("data-motion");
+            gen_results(json_data)
+        }, c.gen_results = function g(h) {
+            document.getElementById("skelly").style.display = "none", document.getElementById("content").style.display = "block";
+            for (var k = 0; k < h.data.length; k++) {
+                var l = document.createElement("a"),
+                    n = document.createElement("img");
+                n.setAttribute("class", "rounded-image"), n.src = h.data[k].thumb;
+                var o = h.data[k].title,
+                    r = h.data[k].url,
+                    t = h.data[k].channel,
+                    u = h.data[k].channel_url;
+                n.setAttribute("data-motion", h.data[k].preview), n.setAttribute("data-img", h.data[k].thumb), n.setAttribute("alt", "No Preview available or your browser does not support webp images"), n.style.display = "inline-block", l.href = r, l.appendChild(n), l.appendChild(document.createElement("br"));
+                var v = document.createElement("b");
+                v.innerHTML = o, l.appendChild(v);
+                var w = document.createElement("a");
+                w.href = u, w.innerHTML = t, n.onmouseover = function () {
+                    this.src = this.getAttribute("data-motion")
+                }, n.onmouseout = function () {
+                    this.src = this.getAttribute("data-img")
+                }, n.ontouchstart = function () {
+                    this.src = this.getAttribute("data-motion")
+                }, n.ontouchend = function () {
+                    this.src = this.getAttribute("data-img")
                 };
-                /**
-                 * @return {undefined}
-                 */
-                element.onmouseout = function () {
-                    this.src = this.getAttribute("data-img");
-                };
-                /**
-                 * @return {undefined}
-                 */
-                element.ontouchstart = function () {
-                    this.src = this.getAttribute("data-motion");
-                };
-                /**
-                 * @return {undefined}
-                 */
-                element.ontouchend = function () {
-                    this.src = this.getAttribute("data-img");
-                };
-                /** @type {!Element} */
-                const output = document.createElement("div");
-                /** @type {string} */
-                output.innerHTML = "Video By:";
-                output.appendChild(a);
-                output.appendChild(document.createElement("br"));
-                output.appendChild(document.createElement("br"));
-                document.getElementById("content").appendChild(node);
-                document.getElementById("content").appendChild(output);
+                var x = document.createElement("div");
+                x.innerHTML = "Video By:", x.appendChild(w), x.appendChild(document.createElement("br")), x.appendChild(document.createElement("br")), document.getElementById("content").appendChild(l), document.getElementById("content").appendChild(x)
             }
-            return "Created Results";
-        };
-        /** @type {function(?): undefined} */
-        self.get_data = search;
-        /** @type {function(string): undefined} */
-        self.extract_data = render;
-        /** @type {function(!Object): ?} */
-        self.gen_results = init;
-    }.call(this);
+            return "Created Results"
+        }
+    }.call(window);

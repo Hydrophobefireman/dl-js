@@ -13,24 +13,24 @@ prbr = document.getElementById("dds_pgbr");
 const el = document.getElementById("div_");
 document.body.appendChild(el);
 const evtSource = new EventSource(`/stream/f/cache?u=${encodeURIComponent(window.dlurl)}`);
-evtSource.addEventListener("message", ({data}) => {
-    if (data.includes("/send-cache")) {
+evtSource.addEventListener("message", e => {
+    if (e.data.includes("/send-cache")) {
         const btn_ = document.getElementById("download_link");
         btn_.innerText = "Click Here To Download the file";
         btn_.style.display = "block";
-        document.getElementById("dl_links").href = data
+        document.getElementById("dl_links").href = e.data
         evtSource.close();
-    } else if (data.includes("ffmpeg")) {
+    } else if (e.data.includes("ffmpeg")) {
         el.innerHTML = "Converting";
         prbr.style.display = "block";
         prbr.style.width = "100%";
         document.getElementById("ffmpeg-alert").innerHTML = "Converting the video";
-    } else if (data.includes("Converting")) {
-        document.getElementById("ffmpeg-alert").innerHTML = data
+    } else if (e.data.includes("Converting")) {
+        document.getElementById("ffmpeg-alert").innerHTML = e.data
     } else {
-        el.innerHTML = `${data}% Completed`;
+        el.innerHTML = `${e.data}% Completed`;
         prbr.style.display = "block";
-        prbr.style.width = `${data}%`;
+        prbr.style.width = `${e.data}%`;
     }
 }, false);
 evtSource.onerror = () => {
