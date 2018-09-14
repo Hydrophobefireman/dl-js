@@ -1,8 +1,8 @@
 const parser = new DOMParser();
 /*modified 
 http://matthewfl.com/js/unPacker.js */
-var unpack = function unpack(code) {
-    var env = {
+const unpack = function unpack(code) {
+    const env = {
         eval: function _eval(c) {
             code = c;
         },
@@ -10,13 +10,13 @@ var unpack = function unpack(code) {
         window: {},
         document: {}
     };
-    eval("with(env) {" + code + "}");
-    code = "" + code;
+    eval(`with(env) {${code}}`);
+    code = `${code}`;
     return code;
 };
 
 function og_search(page, what) {
-    var resp = page.querySelector("meta[property='og:" + what + "']") || page.querySelector("meta[name='og:" + what + "']") || page.querySelector("meta[itemprop='og:" + what + "']");
+    const resp = page.querySelector(`meta[property='og:${what}']`) || page.querySelector(`meta[name='og:${what}']`) || page.querySelector(`meta[itemprop='og:${what}']`);
     if (resp) {
         return resp.getAttribute("content");
     }
@@ -24,7 +24,7 @@ function og_search(page, what) {
 };
 
 function decodehtml(html) {
-    var txt = document.createElement("textarea");
+    const txt = document.createElement("textarea");
     txt.innerHTML = html;
     return txt.value;
 };
@@ -39,14 +39,12 @@ function get_yt_id(_url) {
 };
 
 function vidzi(page, base_url) {
-    var data = {},
-        funcre = /eval\(function\(p[\s\S]*?\)\)\)/,
-        mp4re = /file:"(http.*?mp4)"/;
+    const data = {}, funcre = /eval\(function\(p[\s\S]*?\)\)\)/, mp4re = /file:"(http.*?mp4)"/;
     data.base_url = base_url;
     data.video_urls = [];
     data.thumbnail = 'http://null';
     page = parser.parseFromString(page, 'text/html');
-    var evald = unpack(funcre.exec(page.body.innerHTML)[0]);
+    const evald = unpack(funcre.exec(page.body.innerHTML)[0]);
     data.title = page.title;
     url = mp4re.exec(evald)[1];
     data.video_urls.push({
@@ -58,21 +56,16 @@ function vidzi(page, base_url) {
 
 
 function keeload(page, base_url) {
-    var re = /(eval\(func[\s\S]*?)<\/script/;
+    const re = /(eval\(func[\s\S]*?)<\/script/;
     var page = parser.parseFromString(page, 'text/html');
-    var script_ = re.exec(page);
+    let script_ = re.exec(page);
     if (script_) {
         script_ = script_[1];
     } else {
         script_ = page.scripts[page.scripts.length - 1].innerHTML;
     }
-    var code = unpack(script_),
-        reg = /title:["'](.*?)["'],/g,
-        urlr = /file:["'](.*?)["'],/g,
-        thumb = /image:["'](.*?)["'],/g;
-    var title = reg.exec(code)[1],
-        url = urlr.exec(code)[1],
-        thumbnail = thumb.exec(code)[1];
+    const code = unpack(script_), reg = /title:["'](.*?)["'],/g, urlr = /file:["'](.*?)["'],/g, thumb = /image:["'](.*?)["'],/g;
+    const title = reg.exec(code)[1], url = urlr.exec(code)[1], thumbnail = thumb.exec(code)[1];
     data = {};
     data.base_url = base_url;
     data.title = title;
@@ -86,12 +79,12 @@ function keeload(page, base_url) {
 };
 
 function megadrive(page, base_url) {
-    var data = {};
+    const data = {};
     data.base_url = base_url;
     page = parser.parseFromString(page, 'text/html');
     data.title = og_search(page, 'title');
     data.thumbnail = og_search(page, 'image');
-    var reg = /mp4:["']([\s\S]*?)['"],/;
+    const reg = /mp4:["']([\s\S]*?)['"],/;
     data.video_urls = [];
     data.video_urls.push({
         "url": reg.exec(page.body.innerHTML),
@@ -102,48 +95,40 @@ function megadrive(page, base_url) {
 
 function openload(_page, base_url) {
     console.log('Openload')
-    var sandbox = {
+    const sandbox = {
         window: {
-            location: function (e) {
+            location(e) {
                 return
             }
         },
-        location: function (e) {
+        location(e) {
             return
         }
 
-    }
+    };
     page = parser.parseFromString(_page, 'text/html');
-    var div = document.createElement('div');
+    const div = document.createElement('div');
     div.id = 'OpenloadID';
     div.style.display = 'none';
     div.innerHTML = page.body.innerHTML;
-    with(sandbox) {
-        document.body.appendChild(div);
-        document.body.style.backgroundColor = '#fff';
-        var p = document.getElementById('DtsBlkVFQx') || [...document.querySelectorAll("p")]
-            .filter(a => a.textContent.includes("640K"))[0] || document.getElementsByTagName("p")[1]
-        //document.body.style.visibility = 'hidden';
-        var scripts = page.scripts;
-        eval(scripts[scripts.length - 1].innerHTML)
-    }
-    var url = p;
-    var final_reg = new RegExp(/>[\s\S]([\w-]+~\d{10,}~\d+\.\d+\.0\.0~[\w-]+)[\s\S]</);
-    var bruh = document.getElementById('openload-why');
+    eval('with(sandbox){document.body.appendChild(div);document.body.style.backgroundColor=\'#fff\';var p=document.getElementById(\'DtsBlkVFQx\')||[...document.querySelectorAll("p")].filter(a=>a.textContent.includes("640K"))[0]||document.getElementsByTagName("p")[1]\nvar scripts=page.scripts;eval(scripts[scripts.length-1].innerHTML)}')
+    let url = p;
+    const final_reg = new RegExp(/>[\s\S]([\w-]+~\d{10,}~\d+\.\d+\.0\.0~[\w-]+)[\s\S]</);
+    const bruh = document.getElementById('openload-why');
     bruh.style.display = 'block';
-    bruh.onclick = function () {
+    bruh.onclick = () => {
         data = {};
         data.base_url = base_url;
         if (url) {
             data.video_urls = [{
-                "url": "https://openload.co/stream/" + url.innerHTML + '?mime=true',
+                "url": `https://openload.co/stream/${url.innerHTML}?mime=true`,
                 "quality": "Default"
             }];
         } else {
             console.warn("Using Regex..")
             url = final_reg.exec(div.innerHTML).replace("<", '').replace(">", '');
             data.video_urls = [{
-                "url": "https://openload.co/stream/" + url + '?mime=true',
+                "url": `https://openload.co/stream/${url}?mime=true`,
                 "quality": "Default"
             }];
             document.body.removeChild(div);
@@ -192,7 +177,7 @@ function streamango(page, base_url) {
         ret = srces[t];
         url = ret.src;
         if (!url.includes("http")) {
-            url = "https:" + url;
+            url = `https:${url}`;
         }
         q = ret.height;
         data.video_urls.push({
@@ -264,45 +249,45 @@ function yourupload(page, base_url) {
 }
 
 function youtube(page, url) {
-    var mp3_ = document.getElementById("btn-mp3");
+    const mp3_ = document.getElementById("btn-mp3");
     mp3_.style.display = 'block';
-    var data = {};
+    const data = {};
     data.youtube = true;
     data.base_url = url;
     page = parser.parseFromString(page, 'text/html');
     re = new RegExp(/ytplayer.config\s=\s(.*?)(?=;ytplayer.)/, 'm');
     try {
-        var tmp = re.exec(page.body.innerHTML)[1];
+        const tmp = re.exec(page.body.innerHTML)[1];
         js = JSON.parse(tmp);
     } catch (e) {
         document.getElementById("errs").innerHTML = 'An Unknown Error occured';
         document.getElementById("errs").style.color = 'red';
         console.log(e);
-        window.location = '//dl-py.herokuapp.com/video?url=' + encodeURIComponent(url);
+        window.location = `//dl-py.herokuapp.com/video?url=${encodeURIComponent(url)}`;
         //not gonna send a basejs,embed page and get_video_info file  to the user 
         alert("Age Restricted Video Detected.using python parser");
     }
-    var title = js.args.title;
-    var basejs = "https://www.youtube.com" + js.assets.js;
-    var thumbnail = "https://i.ytimg.com/vi/" + js.args.video_id + "/hqdefault.jpg" || js.args.thumbnail_url;
+    const title = js.args.title;
+    const basejs = `https://www.youtube.com${js.assets.js}`;
+    const thumbnail = `https://i.ytimg.com/vi/${js.args.video_id}/hqdefault.jpg` || js.args.thumbnail_url;
     data.title = title;
     data.basejs = basejs;
     data.thumbnail = thumbnail;
     data.video_urls = [];
     urls = js.args.url_encoded_fmt_stream_map.split(",");
     audio_urls = js.args.adaptive_fmts;
-    var highest = 0;
+    let highest = 0;
     data.ytaudio = true;
     if (audio_urls == undefined) {
         mp3_.innerHTML = "No audio url found for this video";
         data.ytaudio = false;
     } else {
         audio_urls = audio_urls.split(",");
-        var signature_audio;
+        let signature_audio;
         mp3_.innerHTML = "Click here for mp3 version of this video";
         for (var i = 0; i < audio_urls.length; i++) {
             qs = parseqs(audio_urls[i]);
-            if (qs.url.indexOf("audio") > -1) {
+            if (qs.url.includes("audio")) {
                 if (qs.bitrate > highest);
                 highest = qs.bitrate;
                 audio_url = decodeURIComponent(qs.url);
@@ -322,7 +307,7 @@ function youtube(page, url) {
     } else {
         for (var i = 0; i < urls.length; i++) {
             qs = parseqs(urls[i]);
-            if (qs.url.indexOf("ratebypass") > -1) {
+            if (qs.url.includes("ratebypass")) {
                 data.video_urls.push({
                     "url": decodeURIComponent(qs.url),
                     "quality": qs.quality
@@ -335,24 +320,24 @@ function youtube(page, url) {
 }
 
 function youtube_signatures(urls, data, url) {
-    var xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequest();
     console.log(data);
-    xhr.open('GET', "/youtube/js/?url=" + encodeURIComponent(url), true);
-    xhr.onload = function () {
+    xhr.open('GET', `/youtube/js/?url=${encodeURIComponent(url)}`, true);
+    xhr.onload = () => {
         if (xhr.status === 200) {
             ret = JSON.parse(xhr.response);
-            var sig_js = document.createTextNode(ret.sig_js);
-            var func_name = ret.funcname;
-            var scrpt = document.createElement("script");
+            const sig_js = document.createTextNode(ret.sig_js);
+            const func_name = ret.funcname;
+            const scrpt = document.createElement("script");
             scrpt.appendChild(sig_js);
             document.body.appendChild(scrpt);
-            for (var i = 0; i < urls.length; i++) {
+            for (let i = 0; i < urls.length; i++) {
                 qs = parseqs(urls[i]);
-                if (qs.url.indexOf("ratebypass") > -1) {
+                if (qs.url.includes("ratebypass")) {
                     sig = qs.s;
                     console.log(sig);
                     new_sig = window[func_name](sig);
-                    url = decodeURIComponent(qs.url) + "&signature=" + new_sig;
+                    url = `${decodeURIComponent(qs.url)}&signature=${new_sig}`;
                     data.video_urls.push({
                         "url": url,
                         "quality": qs.quality
@@ -361,7 +346,7 @@ function youtube_signatures(urls, data, url) {
             }
             sig = window[func_name](data.audio_url[0].sig_);
             console.log(sig);
-            data.audio_url[0].url += "&signature=" + sig;
+            data.audio_url[0].url += `&signature=${sig}`;
             start_create_video(data);
         }
     };
@@ -376,12 +361,12 @@ function offer_proxy() {
 }
 
 function get_videos(url) {
-    var req = new Request("/videos/fetch/", {
+    const req = new Request("/videos/fetch/", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: "url=" + encodeURIComponent(url)
+        body: `url=${encodeURIComponent(url)}`
     });
     fetch(req)
         .then(ret => ret.json())
@@ -415,28 +400,28 @@ function get_videos(url) {
 }
 
 function parseqs(query) {
-    var params = {};
+    const params = {};
     query = query[0] == '?' ? query.substring(1) : query;
     query = decodeURI(query);
-    var vars = query.split('&');
-    for (var i = 0; i < vars.length; i++) {
-        var pair = vars[i].split('=');
+    const vars = query.split('&');
+    for (let i = 0; i < vars.length; i++) {
+        const pair = vars[i].split('=');
         params[pair[0]] = decodeURIComponent(pair[1]);
     }
     return params;
 };
 
 function create_video(data) {
-    var div_ = document.getElementById("videos");
+    const div_ = document.getElementById("videos");
     if (data.image__) {
-        document.body.innerHTML = "<img src=" + data.image__ + ">";
-        var b = document.createElement("div");
+        document.body.innerHTML = `<img src=${data.image__}>`;
+        const b = document.createElement("div");
         b.innerHTML = data.title;
         document.body.appendChild(b);
         return undefined;
     }
     if (data.youtube && data.ytaudio) {
-        document.getElementById("btn-mp3url").href = "/mp3extract/?mp3u=" + encodeURIComponent(data.audio_url[0].url);
+        document.getElementById("btn-mp3url").href = `/mp3extract/?mp3u=${encodeURIComponent(data.audio_url[0].url)}`;
     }
     json_data = data;
     document.title = json_data.title;
@@ -444,20 +429,20 @@ function create_video(data) {
     if (json_data.video_urls.length == 0) {
         document.getElementById("errs").innerHTML = "No Playable Video Found..please Check if the video exists";
     }
-    for (var i = 0; i < json_data.video_urls.length; i++) {
-        var h3 = document.createElement("div");
+    for (let i = 0; i < json_data.video_urls.length; i++) {
+        const h3 = document.createElement("div");
         h3.innerText = decodehtml(json_data.title);
-        var h5 = document.createElement("div");
-        h5.innerText = "Quality:" + json_data.video_urls[i].quality;
+        const h5 = document.createElement("div");
+        h5.innerText = `Quality:${json_data.video_urls[i].quality}`;
         h3.style.fontWeight = "bold";
         h3.style.marginTop = "10px";
         h3.appendChild(h5);
-        var v = document.createElement("video");
-        var source = document.createElement("source");
-        var url = decodehtml(json_data.video_urls[i].url);
+        const v = document.createElement("video");
+        const source = document.createElement("source");
+        const url = decodehtml(json_data.video_urls[i].url);
         source.src = url;
         source.type = 'video/mp4';
-        source.onerror = function () {
+        source.onerror = () => {
             offer_proxy();
         };
         v.poster = json_data.thumbnail;
@@ -467,16 +452,15 @@ function create_video(data) {
         v.setAttribute("class", 'vid');
         v.preload = 'none';
         v.appendChild(source);
-        var a1 = document.createElement("div");
-        var a2 = document.createElement("a");
+        const a1 = document.createElement("div");
+        const a2 = document.createElement("a");
         a2.href = url;
-        var proxy_ = document.createElement("button"),
-            link_a = document.createElement('a');
+        const proxy_ = document.createElement("button"), link_a = document.createElement('a');
         proxy_.setAttribute("class", "proxy_403");
         link_a.className = 'proxy_link';
         proxy_.style.display = "none";
         proxy_.innerHTML = "View this video";
-        link_a.href = "/fetch_url/?u=" + encodeURIComponent(url) + "&referer=" + encodeURIComponent(json_data.base_url);
+        link_a.href = `/fetch_url/?u=${encodeURIComponent(url)}&referer=${encodeURIComponent(json_data.base_url)}`;
         link_a.appendChild(proxy_);
         a2.innerText = "Direct Link to Video File";
         a1.appendChild(a2);
@@ -489,7 +473,7 @@ function create_video(data) {
     hpg = document.createElement("a");
     hpg.href = "/";
     hpg.innerHTML = "Homepage";
-    var prnt = document.createElement("div");
+    const prnt = document.createElement("div");
     prnt.appendChild(hpg);
     div_.appendChild(prnt);
     document.getElementById("skelly").style.display = 'none';

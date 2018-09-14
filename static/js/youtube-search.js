@@ -1,12 +1,12 @@
 function decodehtml(s) {
     /** @type {!Element} */
-    var ta = document.createElement("textarea");
+    const ta = document.createElement("textarea");
     return ta.innerHTML = s, ta.value;
 }
-var doctitle = decodehtml(decodehtml(document.title));
+const doctitle = decodehtml(decodehtml(document.title));
 if (0 != doctitle.length) {
     /** @type {string} */
-    var titles = "Results for " + doctitle;
+    const titles = `Results for ${doctitle}`;
     /** @type {string} */
     document.title = titles;
 } else {
@@ -17,9 +17,9 @@ if (0 != doctitle.length) {
  * @return {undefined}
  */
 function search() {
-    var q;
+    let q;
     /** @type {string} */
-    var http_url = "/search?q=" + document.getElementById("search").value;
+    const http_url = `/search?q=${document.getElementById("search").value}`;
     /** @type {string} */
     window.location = http_url;
 }
@@ -27,53 +27,53 @@ function search() {
  * @param {!Event} event
  * @return {undefined}
  */
-document.getElementById("search").onkeyup = function (event) {
-    if (13 == event.keyCode) {
+document.getElementById("search").onkeyup = ({keyCode}) => {
+    if (13 == keyCode) {
         search();
     }
 };
 /** @type {(Element|null)} */
-var b = document.getElementById("s-button");
-var get_data;
-var extract_data;
-var gen_results;
-b.onmouseover = function () {
+const b = document.getElementById("s-button");
+let get_data;
+let extract_data;
+let gen_results;
+b.onmouseover = () => {
         /** @type {string} */
         b.style.boxShadow = "3px 3px #d9dce0";
-    }, b.onmouseout = function () {
+    }, b.onmouseout = () => {
         /** @type {string} */
         b.style.boxShadow = "0px 0px #d9dce0";
-    }, b.ontouchstart = function () {
+    }, b.ontouchstart = () => {
         /** @type {string} */
         b.style.boxShadow = "3px 3px #d9dce0";
-    }, b.ontouchend = function () {
+    }, b.ontouchend = () => {
         /** @type {string} */
         b.style.boxShadow = "0px 0px #d9dce0";
     },
     function () {
-        var self = this;
+        const self = this;
         /**
          * @param {?} keyword
          * @return {undefined}
          */
-        var search = function (keyword) {
+        const search = keyword => {
             /** @type {!Request} */
-            var request = new Request("/search/fetch/", {
+            const request = new Request("/search/fetch/", {
                 method: "post",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded"
                 },
-                body: "q=" + encodeURIComponent(keyword)
+                body: `q=${encodeURIComponent(keyword)}`
             });
             fetch(request).then((rawResp) => {
                 return rawResp.json();
             }).then((data) => {
                 extract_data(data);
-            }).then(function (animate_param) {
+            }).then(animate_param => {
                 console.log(animate_param);
-            }).catch(function (snippetText) {
+            }).catch(snippetText => {
                 /** @type {!Element} */
-                var div = document.createElement("div");
+                const div = document.createElement("div");
                 /** @type {string} */
                 div.style.color = "red";
                 /** @type {*} */
@@ -85,34 +85,34 @@ b.onmouseover = function () {
          * @param {string} p
          * @return {undefined}
          */
-        var render = function (p) {
+        const render = p => {
             if (html = p.html, trending = p.trending, console.log(trending), regex = new RegExp(/ytInitialData"]\s=\s({[\s\S]*?});/, "gm"), json_data = {}, json_data.data = [], videos = [], m = regex.exec(html), reg = JSON.parse(m[1]), trending) {
-                var colorNames = reg.contents.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer.contents;
+                const colorNames = reg.contents.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer.contents;
                 for (dat in colorNames) {
-                    var part;
-                    var data = colorNames[dat].itemSectionRenderer.contents[0].shelfRenderer.content;
-                    var tkey;
-                    var cs = data[Object.keys(data)[0]].items;
+                    let part;
+                    const data = colorNames[dat].itemSectionRenderer.contents[0].shelfRenderer.content;
+                    let tkey;
+                    const cs = data[Object.keys(data)[0]].items;
                     videos.push(...cs);
                 }
             } else {
-                for (opts in contents = reg.contents.twoColumnSearchResultsRenderer.primaryContents.sectionListRenderer.contents[0].itemSectionRenderer.contents, contents) {
+                for (opts in (contents = reg.contents.twoColumnSearchResultsRenderer.primaryContents.sectionListRenderer.contents[0].itemSectionRenderer.contents, contents)) {
                     if (null != contents[opts].videoRenderer) {
                         videos.push(contents[opts]);
                     }
                 }
             }
             for (p in videos) {
-                var extracts = videos[p];
+                const extracts = videos[p];
                 /** @type {string} */
-                var j = Object.keys(extracts)[0];
-                var id = extracts[j].videoId;
+                const j = Object.keys(extracts)[0];
+                const id = extracts[j].videoId;
                 /** @type {string} */
-                var thumb = "https://i.ytimg.com/vi/" + id + "/hqdefault.jpg";
-                var title = extracts[j].title.simpleText;
-                var nick = extracts[j].shortBylineText.runs[0].text;
+                const thumb = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+                const title = extracts[j].title.simpleText;
+                const nick = extracts[j].shortBylineText.runs[0].text;
                 /** @type {string} */
-                var channel_url = "//youtube.com" + extracts[j].shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url;
+                const channel_url = `//youtube.com${extracts[j].shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url}`;
                 try {
                     var api = extracts[j].richThumbnail.movingThumbnailRenderer.movingThumbnailDetails.thumbnails[0].url;
                 } catch (e) {
@@ -120,13 +120,13 @@ b.onmouseover = function () {
                     api = null;
                 }
                 /** @type {string} */
-                var requestOrUrl = "/video?url=" + encodeURIComponent("https://youtu.be/" + id);
+                const requestOrUrl = `/video?url=${encodeURIComponent(`https://youtu.be/${id}`)}`;
                 json_data.data.push({
                     url: requestOrUrl,
-                    thumb: thumb,
-                    title: title,
+                    thumb,
+                    title,
                     channel: nick,
-                    channel_url: channel_url,
+                    channel_url,
                     preview: api
                 });
             }
@@ -136,26 +136,26 @@ b.onmouseover = function () {
          * @param {!Object} suiteContainer
          * @return {?}
          */
-        var init = function (suiteContainer) {
+        const init = ({data}) => {
             /** @type {string} */
             document.getElementById("skelly").style.display = "none";
             /** @type {string} */
             document.getElementById("content").style.display = "block";
             /** @type {number} */
-            var i = 0;
-            for (; i < suiteContainer.data.length; i++) {
+            let i = 0;
+            for (; i < data.length; i++) {
                 /** @type {!Element} */
-                var node = document.createElement("a");
+                const node = document.createElement("a");
                 /** @type {!Element} */
-                var element = document.createElement("img");
+                const element = document.createElement("img");
                 element.setAttribute("class", "rounded-image");
-                element.src = suiteContainer.data[i].thumb;
-                var name = suiteContainer.data[i].title;
-                var src = suiteContainer.data[i].url;
-                var info = suiteContainer.data[i].channel;
-                var uriContent = suiteContainer.data[i].channel_url;
-                element.setAttribute("data-motion", suiteContainer.data[i].preview);
-                element.setAttribute("data-img", suiteContainer.data[i].thumb);
+                element.src = data[i].thumb;
+                const name = data[i].title;
+                const src = data[i].url;
+                const info = data[i].channel;
+                const uriContent = data[i].channel_url;
+                element.setAttribute("data-motion", data[i].preview);
+                element.setAttribute("data-img", data[i].thumb);
                 element.setAttribute("alt", "No Preview available or your browser does not support webp images");
                 /** @type {string} */
                 element.style.display = "inline-block";
@@ -163,11 +163,11 @@ b.onmouseover = function () {
                 node.appendChild(element);
                 node.appendChild(document.createElement("br"));
                 /** @type {!Element} */
-                var nOpt = document.createElement("b");
+                const nOpt = document.createElement("b");
                 nOpt.innerHTML = name;
                 node.appendChild(nOpt);
                 /** @type {!Element} */
-                var a = document.createElement("a");
+                const a = document.createElement("a");
                 a.href = uriContent;
                 a.innerHTML = info;
                 /**
@@ -195,7 +195,7 @@ b.onmouseover = function () {
                     this.src = this.getAttribute("data-img");
                 };
                 /** @type {!Element} */
-                var output = document.createElement("div");
+                const output = document.createElement("div");
                 /** @type {string} */
                 output.innerHTML = "Video By:";
                 output.appendChild(a);
