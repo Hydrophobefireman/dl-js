@@ -10,9 +10,11 @@ import subprocess
 import threading
 import time
 import urllib.request
+import shutil
 import uuid
+from bs4 import BeautifulSoup as bs
 from urllib.parse import quote, unquote, urlencode, urlparse
-import file_dl
+
 import requests
 from flask import (
     Flask,
@@ -29,6 +31,7 @@ from htmlmin.minify import html_minify
 from werkzeug.contrib.fixers import ProxyFix
 
 import apIo
+import file_dl
 import streamsites
 import yt_sig
 
@@ -69,9 +72,72 @@ def enforce_https():
         return redirect(request.url.replace("http://", "https://"), code=301)
 
 
+scripts_dir = os.path.join(app.root_path, "static", "dist")
+if not os.path.isdir(scripts_dir):
+    os.mkdir(scripts_dir)
+
+
+def resolve_local_url(url):
+    # all static assets are location in /static folder..so we dont care about urls like "./"
+    if url.startswith("/"):
+        return url
+    elif url.startswith("."):
+        url = url.lstrip(".")
+        print(")))", url)
+    if url.startswith("static"):
+        return "/" + url
+    else:
+        return url
+
+
+def parse_local_assets(html):
+    soup = bs(html, "html5lib")
+    assets = soup.find_all(
+        lambda x: (
+            x.name == "script"
+            and resolve_local_url(x.attrs.get("src", "")).startswith("/")
+        )
+        or (
+            x.name == "link"
+            and resolve_local_url(x.attrs.get("href", "")).startswith("/")
+            and "stylesheet" in x.attrs.get("rel", "")
+        )  # Relative urls
+    )
+    for data in assets:
+        ftype = data.name
+        attr, ext = ("src", ".js") if ftype == "script" else ("href", ".css")
+        src = resolve_local_url(data.attrs.get(attr))
+        print(f"Parsing asset->{src}")
+        if src.startswith("/"):
+            src = src[1:]
+        _file = os.path.join(app.root_path, src)
+        checksum = checksum_f(_file)
+        name = checksum + ext
+        location = os.path.join("static", "dist", name)
+        if os.path.isfile(os.path.join(app.root_path, location)):
+            print("No change in file..skipping")
+        else:
+            shutil.copyfile(_file, os.path.join(app.root_path, location))
+        data.attrs[attr] = f"/{location}"
+    return str(soup)
+
+
+def checksum_f(filename, meth="sha256"):
+    foo = getattr(hashlib, meth)()
+    _bytes = 0
+    total = os.path.getsize(filename)
+    with open(filename, "rb") as f:
+        while _bytes <= total:
+            f.seek(_bytes)
+            chunk = f.read(1024 * 4)
+            foo.update(chunk)
+            _bytes += 1024 * 4
+    return foo.hexdigest()
+
+
 @app.route("/", strict_slashes=False)
 def index():
-    return html_minify(render_template("index.html"))
+    return parse_local_assets(html_minify(render_template("index.html")))
 
 
 @app.route("/video/", strict_slashes=False)
@@ -81,10 +147,14 @@ def video():
         return redirect("/", code=302)
     data = streamsites.check_for_stream_sites(url, request.headers.get("User-Agent"))
     if data:
-        return html_minify(
-            render_template("multioptions.html", urls=data, url=url, number_=len(data))
+        return parse_local_assets(
+            html_minify(
+                render_template(
+                    "multioptions.html", urls=data, url=url, number_=len(data)
+                )
+            )
         )
-    return html_minify(render_template("video.html", url=url))
+    return parse_local_assets(html_minify(render_template("video.html", url=url)))
 
 
 @app.route("/videos/fetch/", methods=["POST"])
@@ -137,7 +207,9 @@ def get_video():
 def extract_to_mp3():
     _url = unquote(request.args.get("mp3u"))
     mt = "audio/mp3"
-    return html_minify(render_template("mp3.html", u=_url, mime=quote(mt)))
+    return parse_local_assets(
+        html_minify(render_template("mp3.html", u=_url, mime=quote(mt)))
+    )
 
 
 @app.route("/stream/f/cache/")
@@ -244,7 +316,9 @@ def proxy_download():
             content_type=fils.headers.get("Content-Type"),
         )
     session["filesize"] = filesize
-    return render_template("send_blob.html", url=url, ref=ref)
+    return parse_local_assets(
+        html_minify(render_template("send_blob.html", url=url, ref=ref))
+    )
 
 
 @app.route("/proxy/f/")
@@ -335,7 +409,7 @@ def progresses():
 
 @app.route("/test/proxy/")
 def proxy_tests():
-    return render_template("test.html")
+    return parse_local_assets(html_minify(render_template("test.html")))
 
 
 @app.route("/api/1/youtube/trending")
@@ -401,7 +475,7 @@ def get_funcname(url):
 
 @app.errorhandler(404)
 def page_error(e):
-    return html_minify(render_template("404.html")), 404
+    return parse_local_assets(html_minify(render_template("404.html"))), 404
 
 
 @app.after_request
@@ -437,7 +511,7 @@ def search():
     q = request.args.get("q")
     if q is None:
         q = "  "
-    return html_minify(render_template("search.html", q=q))
+    return parse_local_assets(html_minify(render_template("search.html", q=q)))
 
 
 @app.route("/search/fetch/", methods=["POST"])

@@ -39,7 +39,9 @@ function get_yt_id(_url) {
 };
 
 function vidzi(page, base_url) {
-    const data = {}, funcre = /eval\(function\(p[\s\S]*?\)\)\)/, mp4re = /file:"(http.*?mp4)"/;
+    const data = {},
+        funcre = /eval\(function\(p[\s\S]*?\)\)\)/,
+        mp4re = /file:"(http.*?mp4)"/;
     data.base_url = base_url;
     data.video_urls = [];
     data.thumbnail = 'http://null';
@@ -64,8 +66,13 @@ function keeload(page, base_url) {
     } else {
         script_ = page.scripts[page.scripts.length - 1].innerHTML;
     }
-    const code = unpack(script_), reg = /title:["'](.*?)["'],/g, urlr = /file:["'](.*?)["'],/g, thumb = /image:["'](.*?)["'],/g;
-    const title = reg.exec(code)[1], url = urlr.exec(code)[1], thumbnail = thumb.exec(code)[1];
+    const code = unpack(script_),
+        reg = /title:["'](.*?)["'],/g,
+        urlr = /file:["'](.*?)["'],/g,
+        thumb = /image:["'](.*?)["'],/g;
+    const title = reg.exec(code)[1],
+        url = urlr.exec(code)[1],
+        thumbnail = thumb.exec(code)[1];
     data = {};
     data.base_url = base_url;
     data.title = title;
@@ -360,7 +367,7 @@ function offer_proxy() {
     }
 }
 
-function get_videos(url) {
+async function get_videos(url) {
     const req = new Request("/videos/fetch/", {
         method: 'POST',
         headers: {
@@ -368,35 +375,33 @@ function get_videos(url) {
         },
         body: `url=${encodeURIComponent(url)}`
     });
-    fetch(req)
-        .then(ret => ret.json())
-        .then(res => {
-            if (res.hasOwnProperty("error")) {
-                document.getElementById("errs").innerHTML = res.error;
-                return undefined;
-            }
-            if (res.hasOwnProperty("redirect")) {
-                document.getElementById("errs").innerHTML = "Redirecting to server extractor";
-                window.location = res.redirect;
-                return;
-            }
-            page = res.html;
-            funcname = res.funcname;
-            url = res.landing_url;
-            try {
-                data = window[funcname](page, url);
-            } catch (e) {
-                console.error(e);
-                document.getElementById("errs").innerHTML = "An Unknown Error Occured";
-                throw (e);
-            }
-            console.log(data);
-            if (typeof data != 'undefined') {
-                /* to prevent errors with async youtube signature decryption 
-                for other websites.it shouldn't matter */
-                start_create_video(data);
-            }
-        });
+    const ret = await fetch(req);
+    const res = await ret.json();
+    if (res.hasOwnProperty("error")) {
+        document.getElementById("errs").innerHTML = res.error;
+        return undefined;
+    }
+    if (res.hasOwnProperty("redirect")) {
+        document.getElementById("errs").innerHTML = "Redirecting to server extractor";
+        window.location = res.redirect;
+        return;
+    }
+    page = res.html;
+    funcname = res.funcname;
+    url = res.landing_url;
+    try {
+        data = window[funcname](page, url);
+    } catch (e) {
+        console.error(e);
+        document.getElementById("errs").innerHTML = "An Unknown Error Occured";
+        throw (e);
+    }
+    console.log(data);
+    if (typeof data != 'undefined') {
+        /* to prevent errors with async youtube signature decryption
+        for other websites.it shouldn't matter */
+        start_create_video(data);
+    }
 }
 
 function parseqs(query) {
@@ -455,7 +460,8 @@ function create_video(data) {
         const a1 = document.createElement("div");
         const a2 = document.createElement("a");
         a2.href = url;
-        const proxy_ = document.createElement("button"), link_a = document.createElement('a');
+        const proxy_ = document.createElement("button"),
+            link_a = document.createElement('a');
         proxy_.setAttribute("class", "proxy_403");
         link_a.className = 'proxy_link';
         proxy_.style.display = "none";
