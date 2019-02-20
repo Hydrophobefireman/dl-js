@@ -397,9 +397,7 @@ def progresses():
     if curr_size >= filesize:
         session.pop("filename")
         session.pop("filesize")
-        dl_url = "/get-cached/x/?" + urlencode(
-            {"f": quote(filename), "hash": checksum_first_5_mb(file_location)}
-        )
+        dl_url = "/get-cached/x/?" + urlencode({"f": quote(filename)})
         return json.dumps(
             {"file": True, "link": dl_url, "done": curr_size, "total": filesize}
         )
