@@ -118,7 +118,7 @@ function openload(_page, base_url) {
     div.id = 'OpenloadID';
     div.style.display = 'none';
     div.innerHTML = page.body.innerHTML;
-    eval('with(sandbox){document.body.appendChild(div);document.body.style.backgroundColor=\'#fff\';var p=document.getElementById(\'DtsBlkVFQx\')||[...document.querySelectorAll("p")].filter(a=>a.textContent.includes("640K"))[0]||document.getElementsByTagName("p")[1]\nvar scripts=page.scripts;eval(scripts[scripts.length-1].innerHTML)}')
+    eval('with(sandbox){document.body.appendChild(div);document.body.style.backgroundColor=\'#fff\';var p=document.getElementById(\'lqEH1\')||document.getElementsByTagName("span")[0]\nvar scripts=page.scripts;eval(scripts[scripts.length-1].innerHTML)}')
     let url = p;
     const final_reg = new RegExp(/>[\s\S]([\w-]+~\d{10,}~\d+\.\d+\.0\.0~[\w-]+)[\s\S]</);
     const bruh = document.getElementById('openload-why');
