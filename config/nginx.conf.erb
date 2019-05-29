@@ -32,7 +32,7 @@ http {
 	}
 
 
-	map $arg_dl $custom_header{
+	map $arg_dl $custom_header {
 		default $upstream_http_content_type
 		true application/octet-stream-
 	}
@@ -59,7 +59,7 @@ http {
 			sendfile on;
 			alias /app/saves/;
 			try_files $arg_f =403;
-			add_header content-type $custom_header
+			add_header content-type $custom_header;
 		}
 	}
 }
