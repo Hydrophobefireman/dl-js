@@ -6,16 +6,16 @@ import os
 import random
 import re
 import secrets
+import shutil
 import subprocess
 import threading
 import time
 import urllib.request
-import shutil
 import uuid
-from bs4 import BeautifulSoup as bs
 from urllib.parse import quote, unquote, urlencode, urlparse
 
 import requests
+from bs4 import BeautifulSoup as bs
 from flask import (
     Flask,
     Response,
@@ -29,9 +29,10 @@ from flask import (
 )
 from htmlmin.minify import html_minify
 from werkzeug.contrib.fixers import ProxyFix
-
+from dl.URL import URL
 import apIo
 import file_dl
+import get_domains
 import streamsites
 import yt_sig
 
@@ -61,20 +62,20 @@ except FileNotFoundError:
 
 @app.before_request
 def enforce_https():
+    url = URL(request.url)
+    host = url.host
+    urlstr = str(url)
     if (
         request.endpoint in app.view_functions
-        and request.url.startswith("http://")
+        and urlstr.startswith("http://")
         and not request.is_secure
-        and "127.0.0.1" not in request.url
-        and "localhost" not in request.url
-        and "herokuapp." in request.url
+        and (
+            all(x not in host for x in ["127.0.0.1", "localhost"])
+            or "herokuapp" in host
+        )
     ):
-        return redirect(request.url.replace("http://", "https://"), code=301)
-
-
-scripts_dir = os.path.join(app.root_path, "static", "dist")
-if not os.path.isdir(scripts_dir):
-    os.mkdir(scripts_dir)
+        url.proto = "https://"
+        return redirect(str(url), code=301)
 
 
 @app.route("/", strict_slashes=False)
@@ -84,9 +85,11 @@ def index():
 
 @app.route("/video/", strict_slashes=False)
 def video():
-    url = request.args.get("url")
-    if url is None:
+    u = request.args.get("url")
+    if u is None:
         return redirect("/", code=302)
+    url_obj = URL(u)
+    url = str(url_obj)
     data = streamsites.check_for_stream_sites(url, request.headers.get("User-Agent"))
     if data:
         return html_minify(
@@ -98,30 +101,15 @@ def video():
 @app.route("/videos/fetch/", methods=["POST"])
 def get_video():
     try:
-        _url = request.form["url"]
-        _url = "http://" + _url if not _url.startswith("http") else _url
-        url = check_for_redirects(_url)
+        _url = URL(request.form["url"])
+        url = URL(check_for_redirects(_url))
     except:
         return json.dumps({"error": "An error occured..please check the url"})
-    reg = r"^https?://(.{3})?\.?(daclips|thevideo|vev.io)"
-    if re.search(reg, url) is not None:
-        redirect = "https://proxy-py.herokuapp.com/api/parse_query?url=%s" % (
-            quote(url)
-        )
-        return json.dumps(
-            {
-                "url": url,
-                "funcname": "null",
-                "download": True,
-                "site": re.search(reg, url).group(),
-                "redirect": redirect,
-            }
-        )
     func_name, url = get_funcname(url)
     if not func_name:
         response = make_response(json.dumps({"error": "not supported"}))
     else:
-        page = requests.get(url, headers=basic_headers, allow_redirects=True)
+        page = url.fetch(headers=basic_headers)
         if not page.ok:
             response = make_response(
                 json.dumps(
@@ -134,69 +122,11 @@ def get_video():
         else:
             response = make_response(
                 json.dumps(
-                    {"html": page.text, "funcname": func_name, "landing_url": url}
+                    {"html": page.text, "funcname": func_name, "landing_url": str(url)}
                 )
             )
     response.headers["Content-Type"] = "application/json"
     return response
-
-
-@app.route("/mp3extract/", strict_slashes=False)
-def extract_to_mp3():
-    _url = unquote(request.args.get("mp3u"))
-    mt = "audio/mp3"
-    return html_minify(render_template("mp3.html", u=_url, mime=quote(mt)))
-
-
-@app.route("/stream/f/cache/")
-def stream_cache():
-    ua = request.headers.get("User-Agent")
-    file_s = unquote(request.args.get("u"))
-    sess = requests.Session()
-    files_n = str(uuid.uuid4())
-    filename = "%s.mp4" % (files_n)
-    fsize = sess.head(
-        file_s, headers={"User-Agent": ua}, allow_redirects=True
-    ).headers.get("Content-Length")
-    r = sess.get(file_s, headers={"User-Agent": ua}, allow_redirects=True, stream=True)
-    dl = str(uuid.uuid4()) + ".mp3"
-    print(file_s)
-    return Response(
-        proxy_download_before_send(filename, r, dl, fsize, 0),
-        content_type="text/event-stream",
-    )
-
-
-def proxy_download_before_send(fn, r, dl, fsize, completed):
-    fsize = int(fsize)
-    print(fn, fsize)
-    with open(fn, "ab") as f:
-        for e in r.iter_content(chunk_size=4096):
-            if e:
-                completed += 4096
-                yield "data: %d\n\n" % ((completed / fsize) * 100)
-                f.write(e)
-    now_ = time.time()
-    print("DONE")
-    yield "data: ffmpeg-init\n\n"
-    g = """ffmpeg -i "%s" "%s" """ % (fn, dl)
-    to_ = "/send-cached/*/download/?url=%s" % (dl)
-    p = subprocess.Popen([g], shell=True)
-    while p.poll() is None:
-        time.sleep(1)
-        yield "data: Converting since %d Seconds\n\n" % (int(time.time()) - now_)
-    yield "data: " + to_ + "\n\n"
-
-
-@app.route("/send-cached/*/download/")
-def send_statics_no_range():
-    mp3file = request.args.get("url")
-    if os.path.isfile(mp3file):
-        rv = make_response(send_from_directory(app.root_path, mp3file))
-        rv.headers["Content-Disposition"] = "attachment;filename=%s" % (mp3file)
-        return rv
-    else:
-        return "no"
 
 
 @app.route("/youtube/js/")
@@ -317,43 +247,34 @@ def progresses():
         return json.dumps({"done": curr_size, "total": filesize})
 
 
+def check(regex, url):
+    return re.search(regex, url, re.IGNORECASE) is not None
+
+
 def get_funcname(url):
-    if (
-        re.search(
-            r"^(https?:)?//.*\.?(openload|oload|openupload)\.", url, re.IGNORECASE
-        )
-        is not None
-    ):
-        return "openload", url
-    if re.search(r"^(https?:)?//.*\.?(keeload)\.", url, re.IGNORECASE) is not None:
+    host = url.host
+    if check(get_domains.openload, host):
+        return "openload", URL(str(url).replace("/f/", "/embed/"))
+    elif check(get_domains.keeload, host):
         return "keeload", url
-    if re.search(r"^(https?:)?//.*\.?megadrive\.", url, re.IGNORECASE) is not None:
+    elif check(get_domains.megadrive, host):
         return "megadrive", url
-    if re.search(r"^(https?:)?//.*\.?estream", url, re.IGNORECASE) is not None:
+    elif check(get_domains.estream, host):
         return "estream", url
-    elif re.search(r"^(https?:)?//.*\.?yourupload\.", url, re.IGNORECASE) is not None:
-        if "/watch/" in url:
-            url = url.replace("/watch/", "/embed/")
-        return "yourupload", url
-    elif re.search(r"^(https?:)?//.*\.?watcheng", url, re.IGNORECASE) is not None:
+    elif check(get_domains.yourupload, host):
+        return "yourupload", URL(str(url).replace("/watch/", "/embed/"))
+    elif check(get_domains.watcheng, host):
         return "watcheng", url
-    elif re.search(r"^(https?:)?//.*\.?instag\.?ram\.?", url) is not None:
+    elif check(get_domains.instagram, host):
         return "instagram", url
-    elif re.search(r"^(https?:)?//.*\.?vidzi\.?", url) is not None:
+    elif check(get_domains.vidzi, host):
         return "vidzi", url
-    elif re.search(r"^(https?:)?//.*\.?rapidvideo\.", url, re.IGNORECASE) is not None:
+    elif check(get_domains.rapidvideo, host):
         return "rapidvideo", url
-    elif re.search(r"^(https?:)?//.*?\.?(youtube\.|youtu\.be|yt\.be)", url) is not None:
+    elif check(get_domains.youtube, host):
         return "youtube", url
-    elif (
-        re.search(
-            r"^https?://(.{3})?\.?(streamango|streamago|streamcloud)",
-            url,
-            re.IGNORECASE,
-        )
-        is not None
-    ):
-        return "streamango", url
+    elif check(get_domains.streamango, host):
+        return "streamango", URL(str(url).replace("/f/", "/embed/"))
     else:
         return False, None
 
