@@ -253,30 +253,12 @@ def check(regex, url):
 
 def get_funcname(url):
     host = url.host
-    if check(get_domains.openload, host):
-        return "openload", URL(str(url).replace("/f/", "/embed/"))
-    elif check(get_domains.keeload, host):
-        return "keeload", url
-    elif check(get_domains.megadrive, host):
-        return "megadrive", url
-    elif check(get_domains.estream, host):
-        return "estream", url
-    elif check(get_domains.yourupload, host):
-        return "yourupload", URL(str(url).replace("/watch/", "/embed/"))
-    elif check(get_domains.watcheng, host):
-        return "watcheng", url
-    elif check(get_domains.instagram, host):
-        return "instagram", url
-    elif check(get_domains.vidzi, host):
-        return "vidzi", url
-    elif check(get_domains.rapidvideo, host):
-        return "rapidvideo", url
-    elif check(get_domains.youtube, host):
-        return "youtube", url
-    elif check(get_domains.streamango, host):
-        return "streamango", URL(str(url).replace("/f/", "/embed/"))
-    else:
-        return False, None
+    for obj in get_domains.domains:
+        if check(obj.get("re"), host):
+            new_url = URL(str(url).replace("/f/", "/embed/"))
+            if host != "youtube":
+                new_url = URL(str(new_url).replace("/watch/", "/embed"))
+            return obj.get("domain"), new_url
 
 
 @app.errorhandler(404)

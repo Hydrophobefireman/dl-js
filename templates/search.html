@@ -1,40 +1,55 @@
 <html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="never" />
+    <meta name="referrer" content="no-referrer" />
+    <link
+      rel="shortcut icon"
+      href="{{ url_for('static', filename='favicon.ico') }}"
+    />
+    <link rel="stylesheet" href="/static/styles/search.min.css" />
+    <title>{{ q | safe }}</title>
+    <meta id="data-search-q" content="{{ q }}" />
+  </head>
 
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="referrer" content="never">
-    <meta name="referrer" content="no-referrer">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <link rel="stylesheet" href="/static/styles/search.min.css">
-    <title>{{q|safe}}</title>
-    <meta id='data-search-q' content="{{q}}" />
-</head>
-
-<body>
+  <body>
     <div>
-        <div class=center_s>
-            <div style="margin-bottom:5px;" id=youtubeprev>Youtube Video previews are now supported!
-            </div>
-            <input class=rc id=search placeholder=search>
-            <button class=rc id=s-button onclick="search()">search</button>
-            <br>
-
-            <div id=content style="display:none;"></div>
-            <div id=skelly class=skelly style="margin-top: 20px;">
-                <span style="font-size: 12px;color:#000;-moz-border-radius: 10px;-webkit-border-radius: 10px;border-radius: 10px;" class=skelly_btn>Loading Videos</span>
-                <div>
-                    <div>
-                        <button id=skelly_div style="height:225px;width:400px;margin-top:30px;"></button>
-                    </div>
-                    <button class=skelly_btn id=skelly_btn style="margin-top: 10px;"></button>
-                </div>
-            </div>
+      <div class="center_s">
+        <div style="margin-bottom:5px;" id="youtubeprev">
+          Youtube Video previews are now supported!
         </div>
-    </div>
-    <script src='../static/jsmin/youtube-search.js'></script>
-    <script>
-        get_data(document.getElementById('data-search-q').getAttribute('content'))
-    </script>
-</body>
+        <input class="rc" id="search" placeholder="search" />
+        <button class="rc" id="s-button" onclick="search()">search</button>
+        <br />
 
+        <div id="content" style="display:none;"></div>
+        <div id="skelly" class="skelly" style="margin-top: 20px;">
+          <span
+            style="font-size: 12px;color:#000;-moz-border-radius: 10px;-webkit-border-radius: 10px;border-radius: 10px;"
+            class="skelly_btn"
+            >Loading Videos</span
+          >
+          <div>
+            <div>
+              <button
+                id="skelly_div"
+                style="height:225px;width:400px;margin-top:30px;"
+              ></button>
+            </div>
+            <button
+              class="skelly_btn"
+              id="skelly_btn"
+              style="margin-top: 10px;"
+            ></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="../static/js/youtube-search.js"></script>
+    <script>
+      get_data(
+        document.getElementById("data-search-q").getAttribute("content")
+      );
+    </script>
+  </body>
 </html>
