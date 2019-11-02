@@ -74,7 +74,7 @@ def enforce_https():
             or "herokuapp" in host
         )
     ):
-        url.proto = "https://"
+        url.proto = "https"
         return redirect(str(url), code=301)
 
 
