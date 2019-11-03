@@ -1,17 +1,9 @@
-import base64
-import hashlib
-import html
 import json
 import os
-import random
 import re
 import secrets
-import shutil
-import subprocess
 import threading
 import time
-import urllib.request
-import uuid
 from urllib.parse import quote, unquote, urlencode, urlparse
 
 import requests
@@ -28,17 +20,13 @@ from flask import (
     stream_with_context,
 )
 from htmlmin.minify import html_minify
-from werkzeug.contrib.fixers import ProxyFix
 from dl.URL import URL
-import apIo
 import file_dl
 import get_domains
 import streamsites
 import yt_sig
 
-api = apIo.Api()
 app = Flask(__name__)
-ProxyFix(app)
 ua = "Mozilla/5.0 (Windows; U; Windows NT 10.0; en-US)\
  AppleWebKit/604.1.38 (KHTML, like Gecko) Chrome/68.0.3325.162"
 
@@ -187,11 +175,9 @@ def proxy_download():
 
 @app.route("/proxy/f/")
 def send_files():
-    print("*************\n", request.headers, "*************\n")
     url = unquote(request.args.get("u"))
     referer = request.args.get("referer")
     acc_range = session["acc-range"]
-    print("Downloading:'" + url[:50] + "...'")
     _filename = secrets.token_urlsafe(15)
     _mime = _mime_types_.get(session.get("content-type")) or ".bin"
     session["filename"] = _filename + _mime
@@ -287,7 +273,6 @@ def cors___(res):
 @app.route("/api/gen_204/", strict_slashes=False)
 def wakeup():
     res = make_response()
-    res.headers["X-Ready"] = str(uuid.uuid4())
     res.headers["Access-Control-Expose-Headers"] = "X-Ready"
     res.headers["Access-Control-Allow-Origin"] = "*"
     res.headers["Access-Control-Allow-Headers"] = "*"

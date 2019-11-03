@@ -4,69 +4,14 @@
     <link rel="shortcut icon" href="/static/favicon.ico" />
     <title>Video</title>
     <link rel="stylesheet" href="https://fonts.pycode.tk/open-sans.css" />
-    <link rel="stylesheet" href="/static/styles/video.min.css" />
-    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/@hydrophobefireman/ui-lib@0.0.5/@ui/ui-lib.umd.js"></script>
-    <link rel="stylesheet" href="https://serve.pycode.tk/dl.css" />
+    <link rel="stylesheet" href="../static/styles/dl.css" />
+    <script src="../static/js/dl.js"></script>
   </head>
 
   <body>
-    <main>
-      <h2 id="title"></h2>
-      <button
-        class="ipgs"
-        style="width:auto;display:none;"
-        id="dlfail"
-        onclick="offer_proxy()"
-      >
-        If downloads fail,try this button
-      </button>
-      <div class="main">
-        <div class="box">
-          <div id="skelly">
-            <span
-              style="font-size: 12px;color:#000;-moz-border-radius: 10px;-webkit-border-radius: 10px;border-radius: 10px;"
-              class="skelly_btn"
-              >Loading Your Video</span
-            >
-            <div>
-              <button
-                id="skelly_div"
-                style="height:225px;width:400px;margin-top:10px;"
-              ></button>
-            </div>
-            <div>
-              <button
-                class="skelly_btn"
-                id="skelly_btn"
-                style="margin-top: 10px;"
-              ></button>
-              <div>
-                <button
-                  class="skelly_btn"
-                  id="skelly_btn"
-                  style="margin-top: 10px;width:5%;"
-                ></button>
-              </div>
-            </div>
-          </div>
-          <!-- <div class="content" id="content">
-            <div class="err" id="errs" style="color:red"></div>
-            <a href="#" id="btn-mp3url">
-              <button class="ipgs" id="btn-mp3" style="display: none"></button>
-            </a>
-            <div id="videos"></div>
-            <div
-              id="openload-why"
-              style="display:none;margin: auto;text-align: center;"
-            >
-              Click Here To Begin Extraction
-            </div>
-          </div> -->
-        </div>
-      </div>
-    </main>
-    <script src="https://serve.pycode.tk/dl.js"></script>
+    <main></main>
+
     <script>
       window.get_videos("{{url|safe}}");
     </script>

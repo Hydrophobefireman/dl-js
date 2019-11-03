@@ -1,5 +1,5 @@
-Flask==1.0.2
-requests==2.20.0
+Flask==1.1.1
+requests==2.22.0
 beautifulsoup4==4.6.0
-django-htmlmin==0.10.0
+django-htmlmin==0.11.0
 gunicorn==19.9.0

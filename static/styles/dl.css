@@ -1,0 +1,49 @@
+body {
+  font-family: "Open Sans", sans-serif;
+}
+.reload-button {
+  display: block;
+  margin: auto;
+  background: #fafafa;
+  outline: 0;
+  border: 2px solid #e3e3e3;
+  border-radius: 20px;
+  padding: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+main {
+  margin: auto;
+  text-align: center;
+}
+
+.title {
+  font-weight: bold;
+}
+
+.video-box {
+  border: 2px solid #e3e3e3;
+  width: 80%;
+  margin: auto;
+  border-radius: 20px;
+}
+
+.proxy-dl {
+  display: block;
+  padding: 4px;
+  border-radius: 10px;
+  border: 2px solid #e3e3e3;
+}
+.offer-proxy {
+  padding: 7px;
+  display: block;
+  margin: auto;
+  border: 2px solid #e3e3e3;
+  border-radius: 10px;
+  background: #fff;
+  margin-bottom: 10px;
+}
+.error {
+  color: #ff0000;
+}
