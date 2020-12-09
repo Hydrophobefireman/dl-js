@@ -3,7 +3,7 @@ import re
 
 import requests
 
-DESKTOP_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3526.73 Safari/537.36"
+DESKTOP_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.3526.73 Safari/537.36"
 
 
 def search_regexes(p: tuple, st: str) -> str:
